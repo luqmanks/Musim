@@ -85,14 +85,17 @@ function Brand() {
 function StepProgress({ step }: { step: Step }) {
   const active = step === "locate" ? 1 : step === "details" ? 2 : step === "priorities" ? 3 : 4;
   return (
-    <ol className="step-progress" aria-label="Progress">
-      {["Field", "Farm", "Priorities", "Compare"].map((label, index) => (
-        <li key={label} className={index + 1 <= active ? "active" : ""} aria-current={index + 1 === active ? "step" : undefined}>
-          <span>{index + 1 < active ? <Icon name="check" /> : index + 1}</span>
-          <small>{label}</small>
-        </li>
-      ))}
-    </ol>
+    <div className="journey-progress">
+      <span>Step {active} of 4</span>
+      <ol className="step-progress" aria-label="Progress">
+        {["Choose field", "Farm details", "Your goals", "Compare"].map((label, index) => (
+          <li key={label} className={index + 1 <= active ? "active" : ""} aria-current={index + 1 === active ? "step" : undefined}>
+            <span>{index + 1 < active ? <Icon name="check" /> : index + 1}</span>
+            <small>{label}</small>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
@@ -214,12 +217,14 @@ export default function FieldShiftApp() {
     window.setTimeout(() => setToast(""), 2400);
   }
 
-  const panelTitle = step === "locate" ? "Start with the field" : step === "details" ? "Tell us what you know" : step === "priorities" ? "What matters most?" : "Field comparison";
+  const panelTitle = step === "locate" ? "Choose your field" : step === "details" ? "Farm details" : step === "priorities" ? "Choose your goals" : "Field comparison";
 
   return (
     <main className={`app-shell step-${step}`}>
       <a className="skip-link" href="#workspace">Skip to field setup</a>
       <FieldMap location={location} layerKey={mapLayer} onLocationChange={setLocation} />
+      {step === "locate" && !location && <div className="map-callout"><span>1</span><div><strong>Tap anywhere on the map</strong><small>Place a field pin, or choose a demo farm in the panel.</small></div></div>}
+      {location && step !== "results" && <div className="map-selection-badge"><Icon name="pin" /><div><small>Selected field</small><strong>{location.name}</strong></div></div>}
 
       <header className="topbar">
         <Brand />
@@ -230,18 +235,17 @@ export default function FieldShiftApp() {
         </div>
       </header>
 
-      {step !== "results" && <StepProgress step={step} />}
-
       <section id="workspace" className={`workspace-panel ${step === "results" ? "results-panel" : ""}`} aria-labelledby="panel-title">
+        {step !== "results" && <StepProgress step={step} />}
         {step !== "locate" && step !== "results" && <button className="back-button" type="button" onClick={goBack}><Icon name="back" /> Back</button>}
         <div className="panel-intro">
-          <p>{step === "locate" ? "Field Shift Malaysia" : step === "details" ? `Question ${detailQuestion + 1} of 4 · all optional` : step === "priorities" ? "Your priorities become model weights" : location?.name}</p>
+          <p>{step === "locate" ? "Start here" : step === "details" ? `Question ${detailQuestion + 1} of 4 · all optional` : step === "priorities" ? "These choices change the ranking" : location?.name}</p>
           <h1 id="panel-title">{panelTitle}</h1>
         </div>
 
         {step === "locate" && (
           <div className="locate-content">
-            <p className="lead">Drop a pin or choose a demo farm. We use the location to build a climate profile from NASA observations.</p>
+            <div className="instruction-card"><span>1</span><p><strong>Select one field.</strong> Tap the map, choose a Malaysian area, or use a ready-made demo.</p></div>
             <label className="field-label" htmlFor="district-select">Choose a place</label>
             <select id="district-select" name="district" autoComplete="off" className="select-control" value={location?.name ?? ""} onChange={(event) => selectDistrict(event.target.value)}>
               <option value="">Choose a Malaysian farming area</option>
@@ -265,6 +269,7 @@ export default function FieldShiftApp() {
 
         {step === "details" && (
           <div className="question-content">
+            <div className="selected-field-inline"><Icon name="pin" /><span><small>Working with</small><strong>{location?.name}</strong></span></div>
             {detailQuestion === 0 && <>
               <h2>What is your current rotation?</h2><p>Choose up to three consecutive seasons.</p>
               <div className="rotation-inputs">{profile.rotation.map((crop, index) => <label key={index}><span>Season {index + 1}</span><select name={`rotation-season-${index + 1}`} autoComplete="off" value={crop} onChange={(event) => setProfile((current) => ({ ...current, rotation: current.rotation.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))}>{CROPS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>)}</div>
@@ -288,7 +293,7 @@ export default function FieldShiftApp() {
 
         {step === "priorities" && (
           <div className="priority-content">
-            <p className="lead">Move a priority from “helpful” to “essential”. The comparison updates around your goals.</p>
+            <div className="instruction-card"><span>3</span><p><strong>Set what matters most.</strong> Move each slider from helpful to essential, then compare the rotations.</p></div>
             <div className="priority-list">{PRIORITIES.map((priority) => <label key={priority.key} className="priority-row"><span><strong>{priority.label}</strong><small>{priority.description}</small></span><input type="range" min="1" max="5" step="1" value={priorities[priority.key]} onChange={(event) => setPriorities((current) => ({ ...current, [priority.key]: Number(event.target.value) }))} aria-label={`${priority.label} priority`} /><output>{priorities[priority.key] === 5 ? "Essential" : priorities[priority.key] >= 3 ? "Important" : "Helpful"}</output></label>)}</div>
             <button className="primary-button" type="button" onClick={compareRotations}>Compare rotations</button>
           </div>

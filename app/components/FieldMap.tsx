@@ -54,6 +54,7 @@ export default function FieldMap({
   useEffect(() => {
     let cancelled = false;
     let map: MLMap | undefined;
+    let resizeObserver: ResizeObserver | undefined;
     (async () => {
       const maplibregl = await import("maplibre-gl");
       if (cancelled || !container.current) return;
@@ -91,9 +92,14 @@ export default function FieldMap({
         },
       });
       mapRef.current = map;
+      resizeObserver = new ResizeObserver(() => map?.resize());
+      resizeObserver.observe(container.current);
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
       map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
-      map.on("load", () => setReady(true));
+      map.on("load", () => {
+        map?.resize();
+        setReady(true);
+      });
       map.on("click", (event) => {
         callbackRef.current({
           lat: Number(event.lngLat.lat.toFixed(5)),
@@ -104,6 +110,7 @@ export default function FieldMap({
     })();
     return () => {
       cancelled = true;
+      resizeObserver?.disconnect();
       markerRef.current?.remove();
       map?.remove();
       mapRef.current = null;
@@ -189,7 +196,12 @@ export default function FieldMap({
 
   return (
     <div className="field-map" aria-label="Interactive map of Malaysia">
-      <div ref={container} className="field-map-canvas" />
+      <div
+        ref={container}
+        className="field-map-canvas"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+      />
+      {!ready && <div className="map-loading" role="status"><span /> Loading the map…</div>}
       <div className="map-vignette" aria-hidden="true" />
     </div>
   );
