@@ -209,7 +209,8 @@ h1, h2, h3 { font-family: var(--font-sans); text-wrap: balance; scroll-margin-to
   scrollbar-color: color-mix(in oklch, var(--foreground) 25%, transparent) transparent;
 }
 .workspace-panel:not(.results-panel) { display: flex; flex-direction: column; height: calc(100dvh - 36px); overflow: hidden; }
-.step-results .results-panel { position: absolute; left: 18px; right: 18px; bottom: 18px; width: auto; height: min(62dvh, 780px); min-height: 500px; max-height: calc(100dvh - 124px); margin: 0; padding: 24px 30px 26px; overflow: hidden; border-radius: 22px; }
+.step-results .results-panel { position: fixed; inset: 0; width: 100%; height: 100dvh; min-height: 0; max-height: none; margin: 0; padding: 96px 30px 26px; overflow: hidden; border-radius: 0; }
+.step-results .map-evidence-dock { display: none; }
 .back-button { display: inline-flex; align-items: center; gap: 3px; padding: 7px 0; border: 0; background: transparent; color: var(--muted-foreground); font-weight: 700; }
 .panel-intro { flex: none; margin: 8px 0 22px; }
 .panel-intro > p { max-width: 38ch; margin: 9px 0 0; color: var(--muted-foreground); font-size: 14px; font-weight: 400; line-height: 1.5; }
@@ -454,8 +455,10 @@ h1, h2, h3 { font-family: var(--font-sans); text-wrap: balance; scroll-margin-to
   .map-selection-badge { width: 100%; }
   .workspace-panel, .results-panel { position: relative; width: 100%; min-height: 58svh; max-height: none; margin: 0; padding: 24px 20px 34px; border: 0; border-radius: 22px 22px 0 0; overflow: visible; }
   .workspace-panel:not(.results-panel) { height: auto; overflow: visible; }
-  .step-results { overflow: auto; padding-top: 46svh; }
-  .step-results .results-panel { position: relative; inset: auto; width: 100%; height: auto; min-height: 58svh; max-height: none; margin: 0; padding: 24px 20px 34px; overflow: visible; border-radius: 22px 22px 0 0; }
+  .step-results { overflow: hidden; padding-top: 0; }
+  .step-results .results-panel { position: fixed; inset: 0; width: 100%; height: 100dvh; min-height: 0; max-height: none; margin: 0; padding: 80px 20px 24px; overflow: hidden; border-radius: 0; }
+  .step-results .results-panel::before { display: none; }
+  .step-results .results-content { height: 100%; overflow-y: auto; }
   .results-content { height: auto; overflow: visible; }
   .workspace-panel::before { content: ""; position: absolute; top: 9px; left: 50%; width: 40px; height: 4px; border-radius: 4px; background: color-mix(in oklch, var(--foreground) 18%, transparent); transform: translateX(-50%); }
   .panel-intro h1 { font-size: 42px; }
