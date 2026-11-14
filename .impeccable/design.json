@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-14T16:23:39.9864570+08:00",
+  "title": "Design System: Musim Field Shift",
+  "extensions": {
+    "colorMeta": {
+      "field-ink": { "role": "neutral", "displayName": "Field Ink", "canonical": "#102a2a", "tonalRamp": ["oklch(15% 0.025 195)", "oklch(25% 0.035 195)", "oklch(36% 0.04 195)", "oklch(48% 0.04 195)", "oklch(60% 0.035 195)", "oklch(72% 0.025 195)", "oklch(84% 0.015 195)", "oklch(95% 0.006 195)"] },
+      "weathered-slate": { "role": "neutral", "displayName": "Weathered Slate", "canonical": "#47615d", "tonalRamp": ["oklch(15% 0.015 185)", "oklch(25% 0.025 185)", "oklch(36% 0.03 185)", "oklch(48% 0.035 185)", "oklch(60% 0.03 185)", "oklch(72% 0.022 185)", "oklch(84% 0.014 185)", "oklch(95% 0.005 185)"] },
+      "rice-paper": { "role": "neutral", "displayName": "Rice Paper", "canonical": "#f7f5eb", "tonalRamp": ["oklch(15% 0.012 95)", "oklch(25% 0.018 95)", "oklch(36% 0.022 95)", "oklch(48% 0.025 95)", "oklch(60% 0.026 95)", "oklch(72% 0.024 95)", "oklch(84% 0.02 95)", "oklch(95% 0.012 95)"] },
+      "paddy-husk": { "role": "neutral", "displayName": "Paddy Husk", "canonical": "#ece9da", "tonalRamp": ["oklch(15% 0.014 95)", "oklch(25% 0.02 95)", "oklch(36% 0.026 95)", "oklch(48% 0.03 95)", "oklch(60% 0.03 95)", "oklch(72% 0.027 95)", "oklch(84% 0.022 95)", "oklch(95% 0.01 95)"] },
+      "warm-white": { "role": "neutral", "displayName": "Warm White", "canonical": "#fffefa", "tonalRamp": ["oklch(15% 0.008 90)", "oklch(25% 0.012 90)", "oklch(36% 0.016 90)", "oklch(48% 0.018 90)", "oklch(60% 0.018 90)", "oklch(72% 0.016 90)", "oklch(84% 0.012 90)", "oklch(95% 0.006 90)"] },
+      "young-paddy": { "role": "secondary", "displayName": "Young Paddy", "canonical": "#a8cf45", "tonalRamp": ["oklch(15% 0.07 120)", "oklch(25% 0.11 120)", "oklch(36% 0.15 120)", "oklch(48% 0.18 120)", "oklch(60% 0.19 120)", "oklch(72% 0.16 120)", "oklch(84% 0.1 120)", "oklch(95% 0.035 120)"] },
+      "leaf-green": { "role": "secondary", "displayName": "Leaf Green", "canonical": "#507326", "tonalRamp": ["oklch(15% 0.05 125)", "oklch(25% 0.08 125)", "oklch(36% 0.11 125)", "oklch(48% 0.13 125)", "oklch(60% 0.12 125)", "oklch(72% 0.095 125)", "oklch(84% 0.06 125)", "oklch(95% 0.02 125)"] },
+      "monsoon-teal": { "role": "primary", "displayName": "Monsoon Teal", "canonical": "#0b4a5b", "tonalRamp": ["oklch(15% 0.035 220)", "oklch(25% 0.055 220)", "oklch(36% 0.07 220)", "oklch(48% 0.08 220)", "oklch(60% 0.07 220)", "oklch(72% 0.05 220)", "oklch(84% 0.028 220)", "oklch(95% 0.008 220)"] },
+      "deep-monsoon": { "role": "primary", "displayName": "Deep Monsoon", "canonical": "#07333e", "tonalRamp": ["oklch(15% 0.03 220)", "oklch(25% 0.045 220)", "oklch(36% 0.06 220)", "oklch(48% 0.065 220)", "oklch(60% 0.055 220)", "oklch(72% 0.04 220)", "oklch(84% 0.024 220)", "oklch(95% 0.007 220)"] },
+      "rain-sky": { "role": "tertiary", "displayName": "Rain Sky", "canonical": "#70bfc4", "tonalRamp": ["oklch(15% 0.035 195)", "oklch(25% 0.055 195)", "oklch(36% 0.075 195)", "oklch(48% 0.09 195)", "oklch(60% 0.1 195)", "oklch(72% 0.08 195)", "oklch(84% 0.05 195)", "oklch(95% 0.015 195)"] },
+      "rain-blue": { "role": "tertiary", "displayName": "Rain Blue", "canonical": "#347f9b", "tonalRamp": ["oklch(15% 0.04 225)", "oklch(25% 0.065 225)", "oklch(36% 0.085 225)", "oklch(48% 0.1 225)", "oklch(60% 0.09 225)", "oklch(72% 0.065 225)", "oklch(84% 0.038 225)", "oklch(95% 0.01 225)"] },
+      "heat-orange": { "role": "tertiary", "displayName": "Heat Orange", "canonical": "#e56b38", "tonalRamp": ["oklch(15% 0.06 45)", "oklch(25% 0.1 45)", "oklch(36% 0.14 45)", "oklch(48% 0.18 45)", "oklch(60% 0.2 45)", "oklch(72% 0.16 45)", "oklch(84% 0.09 45)", "oklch(95% 0.025 45)"] },
+      "field-line": { "role": "neutral", "displayName": "Field Line", "canonical": "rgba(16, 42, 42, 0.15)", "tonalRamp": ["oklch(15% 0.01 195)", "oklch(25% 0.015 195)", "oklch(36% 0.018 195)", "oklch(48% 0.02 195)", "oklch(60% 0.018 195)", "oklch(72% 0.014 195)", "oklch(84% 0.009 195)", "oklch(95% 0.003 195)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Field Display", "purpose": "Short, confident step and results statements." },
+      "headline": { "displayName": "Decision Headline", "purpose": "Farmer-facing questions and major section decisions." },
+      "title": { "displayName": "Working Title", "purpose": "Cards, scenarios, and grouped controls." },
+      "body": { "displayName": "Field Body", "purpose": "Instructions, explanations, and decision guidance." },
+      "label": { "displayName": "Evidence Label", "purpose": "Compact categories and metadata." }
+    },
+    "shadows": [
+      { "name": "map-ambient", "value": "0 24px 70px rgba(7, 51, 62, 0.18)", "purpose": "Keeps panels and evidence overlays legible above satellite imagery." },
+      { "name": "marker-lift", "value": "0 5px 18px rgba(7, 51, 62, 0.4)", "purpose": "Separates the field marker from varied map textures." }
+    ],
+    "motion": [
+      { "name": "state-change", "value": "180ms ease", "purpose": "Fast feedback for hover, focus, and selected states." },
+      { "name": "map-orbit", "value": "800ms linear infinite", "purpose": "Indicates map loading without implying progress precision." }
+    ],
+    "breakpoints": [
+      { "name": "compact", "value": "420px" },
+      { "name": "mobile", "value": "720px" },
+      { "name": "workspace", "value": "1050px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single forward action for the current farmer decision.",
+      "html": "<button class=\"ds-btn-primary\">Continue</button>",
+      "css": ".ds-btn-primary{min-height:48px;padding:14px 18px;border:0;border-radius:12px;background:#0b4a5b;color:#fffefa;font:800 14px/1.2 Nunito,system-ui,sans-serif;transition:background 180ms ease,transform 180ms ease}.ds-btn-primary:hover{background:#07333e;transform:translateY(-1px)}.ds-btn-primary:focus-visible{outline:3px solid #f4b942;outline-offset:3px}.ds-btn-primary:active{transform:translateY(0)}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A reversible supporting action such as back, redraw, or compare.",
+      "html": "<button class=\"ds-btn-secondary\">Back</button>",
+      "css": ".ds-btn-secondary{min-height:44px;padding:12px 16px;border:1px solid rgba(16,42,42,.15);border-radius:12px;background:#fffefa;color:#0b4a5b;font:800 14px/1.2 Nunito,system-ui,sans-serif;transition:border-color 180ms ease,transform 180ms ease}.ds-btn-secondary:hover{border-color:#0b4a5b;transform:translateY(-1px)}.ds-btn-secondary:focus-visible{outline:3px solid #f4b942;outline-offset:3px}.ds-btn-secondary:active{transform:translateY(0)}"
+    },
+    {
+      "name": "Field Input",
+      "kind": "input",
+      "refersTo": "field-input",
+      "description": "A plainly labeled farm detail with a visible focus state.",
+      "html": "<label class=\"ds-field\"><span>Current crop</span><select><option>Paddy rice</option><option>Not sure</option></select></label>",
+      "css": ".ds-field{display:grid;gap:6px;color:#102a2a;font:800 11px/1.2 Nunito,system-ui,sans-serif}.ds-field select{height:43px;padding:0 34px 0 11px;border:1px solid rgba(16,42,42,.15);border-radius:9px;background:#fffefa;color:#102a2a;font:400 14px/1.4 Nunito,system-ui,sans-serif}.ds-field select:hover{border-color:#47615d}.ds-field select:focus-visible{outline:3px solid #f4b942;outline-offset:3px}"
+    },
+    {
+      "name": "Evidence Chip",
+      "kind": "chip",
+      "refersTo": "evidence-chip",
+      "description": "Compact context for confidence, source type, or field status.",
+      "html": "<span class=\"ds-evidence-chip\">Moderate confidence</span>",
+      "css": ".ds-evidence-chip{display:inline-flex;align-items:center;padding:6px 10px;border:1px solid rgba(16,42,42,.15);border-radius:999px;background:#f7f5eb;color:#47615d;font:800 11px/1.2 Nunito,system-ui,sans-serif}.ds-evidence-chip:focus-visible{outline:3px solid #f4b942;outline-offset:3px}"
+    },
+    {
+      "name": "Journey Navigation",
+      "kind": "nav",
+      "description": "A four-step orientation aid that shows progress without hiding labels.",
+      "html": "<nav class=\"ds-journey\" aria-label=\"Plan progress\"><span class=\"is-done\">1<small>Locate</small></span><span class=\"is-active\">2<small>Farm</small></span><span>3<small>Priorities</small></span><span>4<small>Plan</small></span></nav>",
+      "css": ".ds-journey{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;color:#47615d;font:800 11px/1.2 Nunito,system-ui,sans-serif}.ds-journey span{display:grid;justify-items:center;gap:5px}.ds-journey span::first-line{display:grid}.ds-journey small{font:800 10px/1.2 Nunito,system-ui,sans-serif}.ds-journey .is-done,.ds-journey .is-active{color:#07333e}.ds-journey .is-active{background:#a8cf45;border-radius:9px;padding:6px}"
+    },
+    {
+      "name": "Rotation Card",
+      "kind": "card",
+      "refersTo": "rotation-card",
+      "description": "A rotation option that exposes fit, benefits, trade-offs, and evidence progressively.",
+      "html": "<article class=\"ds-rotation-card\"><span>Best fit for water saving</span><h3>Mung bean break crop</h3><p>Uses less water and helps interrupt the rice pest cycle.</p><strong>82% fit</strong><details><summary>Why this scored well</summary><p>Seasonal rainfall and current field priorities support this option. Check buyer access locally.</p></details></article>",
+      "css": ".ds-rotation-card{max-width:360px;padding:16px;border:1px solid #507326;border-radius:14px;background:#fffefa;color:#102a2a;font:400 14px/1.5 Nunito,system-ui,sans-serif}.ds-rotation-card span{color:#507326;font-size:11px;font-weight:800}.ds-rotation-card h3{margin:6px 0;font-size:18px;line-height:1.2}.ds-rotation-card strong{color:#0b4a5b}.ds-rotation-card summary{margin-top:12px;color:#0b4a5b;font-weight:800;cursor:pointer}.ds-rotation-card summary:focus-visible{outline:3px solid #f4b942;outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Field Companion",
+    "overview": "Musim should feel like a trusted field notebook made more capable by satellite evidence: practical, calm, and easy to use with dusty hands or limited technical experience. Familiar farming language leads; scientific detail remains close at hand for people who want to inspect the evidence.\n\nThe interface is warm and grounded rather than clinical. It uses generous touch targets, plain explanations, and a map that supports the decision instead of dominating it. Recommendations remain visibly uncertain and invite local validation, because the product supports farmer and adviser judgment rather than replacing it.",
+    "keyCharacteristics": [
+      "Farmer priorities lead the scoring and explanation.",
+      "Warm paper surfaces sit over deep monsoon tones and living crop greens.",
+      "Evidence is layered from a plain-language takeaway to source and confidence detail.",
+      "Controls remain usable outdoors, on small screens, and without geospatial expertise.",
+      "Local knowledge is treated as a required input, not an afterthought."
+    ],
+    "rules": [
+      { "name": "The Weather-Signal Rule", "body": "Reserve blue and orange for environmental meaning; do not use them as arbitrary decoration.", "section": "colors" },
+      { "name": "The Plain-Language-First Rule", "body": "State the field meaning before introducing an acronym such as NDVI or evapotranspiration, and explain the term where it appears.", "section": "typography" },
+      { "name": "The Decision-Before-Data Rule", "body": "Lead each view with the choice or takeaway, then offer conditions, sources, and model detail progressively.", "section": "layout" },
+      { "name": "The Map-Only-Glass Rule", "body": "Translucency and backdrop blur belong to controls over imagery; content cards stay opaque and easy to read.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do let farmers set water, equipment, market, and soil priorities before scoring rotations.",
+      "Do pair satellite indicators with ground observations and clearly label confidence and data age.",
+      "Do translate scientific measures into a field consequence, then allow the farmer to inspect the technical term.",
+      "Do keep essential controls at least comfortable touch size and readable in bright outdoor conditions.",
+      "Do identify exactly where an agronomist, extension officer, or farmer should validate the recommendation."
+    ],
+    "donts": [
+      "Don't present model outputs as prescriptions or conceal uncertainty behind a single score.",
+      "Don't make map drawing the only path; preserve a quick point estimate for farmers without field boundaries.",
+      "Don't rely on color alone to communicate stress, confidence, selection, or recommendation.",
+      "Don't crowd the first view with raw datasets, unexplained acronyms, or competing primary actions.",
+      "Don't use decorative gradients, excessive glass effects, or tiny metadata that weakens field readability."
+    ]
+  }
+}
