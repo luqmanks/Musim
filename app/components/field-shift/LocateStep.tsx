@@ -66,7 +66,7 @@ export function LocateStep({
             </label>
             <Button type="button" variant="outline" size="lg" onClick={onUseDeviceLocation} disabled={locating}>{locating ? "Finding…" : "Use location"}</Button>
           </div>
-          <p className="step-note"><strong>Tap each field corner.</strong> The boundary closes after three points.</p>
+          <p className="step-note"><strong>Tap each field corner.</strong> The boundary closes after three points. Tap an existing corner to delete it.</p>
           <Card className="boundary-status" aria-live="polite">
             <div><span>Boundary</span><strong>{boundaryPoints < 3 ? `${boundaryPoints} of 3 minimum points` : `${boundaryPoints} corners mapped`}</strong></div>
             <div><span>Estimated area</span><strong>{boundaryPoints >= 3 ? `${location?.areaHectares?.toLocaleString()} ha` : "—"}</strong></div>
@@ -78,7 +78,7 @@ export function LocateStep({
         </>
       ) : (
         <>
-          <p className="step-note"><strong>Tap the map</strong> or choose a nearby farming area.</p>
+          <p className="step-note"><strong>Tap the map</strong> or choose a nearby farming area. Tap the selected point to delete it.</p>
           <label className="field-label">Choose a place
             <Select value={location?.name ?? ""} onValueChange={onSelectDistrict}>
               <SelectTrigger id="district-select" className="shadcn-select"><SelectValue placeholder="Choose a Malaysian farming area" /></SelectTrigger>

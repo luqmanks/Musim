@@ -6,6 +6,7 @@ import type {
   GeoJSONSourceSpecification,
   Map as MLMap,
   Marker as MLMarker,
+  Popup as MLPopup,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { GIBS_LAYERS, gibsTileUrl, isoDaysBefore } from "../lib/gibs";
@@ -118,12 +119,13 @@ export default function FieldMap({
   layerKey?: MapLayerKey;
   selectionMode?: SelectionMode;
   selectionEnabled?: boolean;
-  onLocationChange: (location: FieldLocation) => void;
+  onLocationChange: (location: FieldLocation | null) => void;
   onImageryStatusChange?: (status: ImageryStatus) => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MLMap | null>(null);
   const markerRef = useRef<MLMarker | null>(null);
+  const popupRef = useRef<MLPopup | null>(null);
   const callbackRef = useRef(onLocationChange);
   const locationRef = useRef(location);
   const selectionModeRef = useRef(selectionMode);
@@ -212,6 +214,28 @@ export default function FieldMap({
         },
       });
       mapRef.current = map;
+      function showDeleteOption(coordinates: FieldCoordinate, index?: number) {
+        if (!map || !selectionEnabledRef.current) return;
+        popupRef.current?.remove();
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "field-point-delete";
+        button.textContent = index === undefined ? "Delete point" : `Delete corner ${index + 1}`;
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          if (!selectionEnabledRef.current) return;
+          if (index === undefined) callbackRef.current(null);
+          else {
+            const points = (locationRef.current?.boundary ?? []).filter((_, pointIndex) => pointIndex !== index);
+            callbackRef.current(points.length ? locationFromBoundary(points) : null);
+          }
+          popupRef.current?.remove();
+        });
+        popupRef.current = new maplibregl.Popup({ offset: 12 })
+          .setLngLat(coordinates)
+          .setDOMContent(button)
+          .addTo(map);
+      }
       resizeObserver = new ResizeObserver(() => map?.resize());
       resizeObserver.observe(container.current);
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
@@ -226,6 +250,15 @@ export default function FieldMap({
         if (!selectionEnabledRef.current) return;
         if (selectionModeRef.current === "boundary") {
           const current = locationRef.current?.boundary ?? [];
+          const hit = map?.getLayer("selected-field-points") ? map.queryRenderedFeatures([
+            [event.point.x - 10, event.point.y - 10],
+            [event.point.x + 10, event.point.y + 10],
+          ], { layers: ["selected-field-points"] })[0] : undefined;
+          const index = Number(hit?.properties?.index);
+          if (hit && Number.isInteger(index) && current[index]) {
+            showDeleteOption(current[index], index);
+            return;
+          }
           const point: FieldCoordinate = [
             Number(event.lngLat.lng.toFixed(6)),
             Number(event.lngLat.lat.toFixed(6)),
@@ -239,15 +272,31 @@ export default function FieldMap({
           name: "Pinned field",
         });
       });
+      // Keep pin activation separate from map clicks so it never places a new point.
+      const onPinClick = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        if (!target.closest(".field-marker")) return;
+        event.stopPropagation();
+        const selected = locationRef.current;
+        if (selected) showDeleteOption([selected.lng, selected.lat]);
+      };
+      const mapContainer = container.current;
+      mapContainer.addEventListener("click", onPinClick, true);
+      map.on("remove", () => mapContainer.removeEventListener("click", onPinClick, true));
     })();
     return () => {
       cancelled = true;
       resizeObserver?.disconnect();
       markerRef.current?.remove();
+      popupRef.current?.remove();
       map?.remove();
       mapRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    popupRef.current?.remove();
+  }, [location, selectionEnabled, selectionMode]);
 
   useEffect(() => {
     if (!ready || !mapRef.current) return;
@@ -276,6 +325,14 @@ export default function FieldMap({
       const element = document.createElement("div");
       element.className = "field-marker";
       element.setAttribute("aria-label", "Selected field");
+      element.setAttribute("role", "button");
+      element.tabIndex = selectionEnabledRef.current ? 0 : -1;
+      element.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          element.click();
+        }
+      });
       markerRef.current = new maplibregl.Marker({ element })
         .setLngLat([location.lng, location.lat])
         .addTo(map);
