@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CornerDownRight } from "lucide-react";
 import type { ClimateSummary, PriorityKey, RotationScore, ScenarioKey } from "../../lib/field-shift";
 import { cropLabel } from "../../lib/field-shift";
 import { PRIORITIES, SCENARIOS, type ResultTab } from "./config";
@@ -35,21 +38,22 @@ export function ResultsStep({
           <span className="location-kicker"><Icon name="pin" /> {location?.name}{location?.areaHectares ? ` · ${location.areaHectares.toLocaleString()} ha` : ""}</span>
           <p>See what the climate means for this field, then compare practical rotation options.</p>
         </div>
-        <button className="edit-button" type="button" onClick={onEdit}>Edit my answers</button>
+        <Button variant="ghost" type="button" onClick={onEdit}>Edit answers</Button>
       </div>
-      <div className="result-tabs" role="tablist" aria-label="Result views">
-        <button id="conditions-tab" role="tab" aria-selected={resultTab === "conditions"} aria-controls="conditions-panel" onClick={() => onTabChange("conditions")}>Field conditions</button>
-        <button id="rotations-tab" role="tab" aria-selected={resultTab === "rotations"} aria-controls="rotations-panel" onClick={() => onTabChange("rotations")}>Rotation options</button>
-      </div>
+      <Tabs value={resultTab} onValueChange={(value) => onTabChange(value as ResultTab)} className="results-tabs-shell">
+        <TabsList className="result-tabs" aria-label="Result views">
+          <TabsTrigger value="conditions">Field conditions</TabsTrigger>
+          <TabsTrigger value="rotations">Rotation options</TabsTrigger>
+        </TabsList>
 
-      {loading && (
-        <div className="loading-state" role="status">
-          <span className="loading-orbit" /><h2>Reading the field from space</h2><p>Building a five-year climate profile from NASA POWER…</p>
-        </div>
-      )}
+        {loading && (
+          <div className="loading-state" role="status">
+            <span className="loading-orbit" /><h2>Reading the field from space</h2><p>Building a five-year climate profile from NASA POWER…</p>
+          </div>
+        )}
 
-      {!loading && climate && resultTab === "conditions" && (
-        <div id="conditions-panel" className="conditions-view" role="tabpanel" aria-labelledby="conditions-tab">
+        {!loading && climate && (
+        <TabsContent value="conditions" className="conditions-view">
           {climate.isFallback && <div className="data-warning"><strong>Demonstration climate shown</strong><span>The live NASA request was unavailable. Scores are clearly marked as lower confidence.</span></div>}
           <div className="conditions-summary">
             <div className="metric-row">
@@ -58,27 +62,28 @@ export function ResultsStep({
               <div><span>Wettest month</span><strong>{climate.wettestMonth}</strong></div>
               <div><span>Drier months</span><strong>{climate.dryMonths}</strong></div>
             </div>
-            <div className="insight-callout"><span aria-hidden="true">↳</span><p><strong>What this means: {climate.wettestMonth} has the strongest heavy-rain pressure.</strong> Keep living cover on the soil where possible and confirm drainage in the field.</p></div>
+            <div className="insight-callout"><CornerDownRight className="icon" aria-hidden="true" /><p><strong>What this means: {climate.wettestMonth} has the strongest heavy-rain pressure.</strong> Keep living cover on the soil where possible and confirm drainage in the field.</p></div>
             <div className="provenance-card">
               <div><span>Source</span><strong>{climate.source}</strong></div><div><span>Period</span><strong>{climate.period}</strong></div><div><span>Spatial context</span><strong>{climate.resolution}</strong></div>
               <a href={climate.sourceUrl} target="_blank" rel="noreferrer">Open NASA source</a>
             </div>
-            <button className="primary-button" type="button" onClick={() => onTabChange("rotations")}>See rotation options</button>
+            <Button className="step-primary" size="lg" type="button" onClick={() => onTabChange("rotations")}>See rotation options</Button>
           </div>
           <ClimateTimeline climate={climate} />
-        </div>
-      )}
+        </TabsContent>
+        )}
 
-      {!loading && climate && resultTab === "rotations" && (
-        <div id="rotations-panel" className="rotations-view" role="tabpanel" aria-labelledby="rotations-tab">
+        {!loading && climate && (
+        <TabsContent value="rotations" className="rotations-view">
           <div className="scenario-control">
             <div><strong>Stress-test the plan</strong><span>{SCENARIOS.find((item) => item.key === scenario)?.note}</span></div>
-            <div>{SCENARIOS.map((item) => <button key={item.key} type="button" aria-pressed={scenario === item.key} onClick={() => onScenarioChange(item.key)}>{item.label}</button>)}</div>
+            <div>{SCENARIOS.map((item) => <Button key={item.key} variant="ghost" size="sm" type="button" aria-pressed={scenario === item.key} onClick={() => onScenarioChange(item.key)}>{item.label}</Button>)}</div>
           </div>
           <div className="rotation-cards">{results.map((result) => <RotationCard key={result.id} result={result} featured={result.id === "conservative"} />)}</div>
           <p className="decision-note"><strong>Use this as a conversation guide.</strong> Confirm crop timing, drainage, seed access and prices with a local agricultural officer before changing your rotation.</p>
-        </div>
-      )}
+        </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 }

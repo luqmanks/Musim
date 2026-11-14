@@ -1,232 +1,109 @@
 ---
 name: Musim Field Shift
-description: A practical field companion that turns climate evidence into farmer-led rotation choices.
+description: A farmer-centered field planning interface built entirely on shadcn preset b7Br7G7Ci.
+preset: b7Br7G7Ci
+style: radix-maia
+baseColor: mist
+theme: emerald
+iconLibrary: lucide
+font: inter
+radius: medium
 colors:
-  field-ink: "#102a2a"
-  weathered-slate: "#47615d"
-  rice-paper: "#f7f5eb"
-  paddy-husk: "#ece9da"
-  warm-white: "#fffefa"
-  young-paddy: "#a8cf45"
-  leaf-green: "#507326"
-  monsoon-teal: "#0b4a5b"
-  deep-monsoon: "#07333e"
-  rain-sky: "#70bfc4"
-  rain-blue: "#347f9b"
-  heat-orange: "#e56b38"
-  field-line: "rgba(16, 42, 42, 0.15)"
+  background: "oklch(1 0 0)"
+  foreground: "oklch(0.148 0.004 228.8)"
+  primary: "oklch(0.508 0.118 165.612)"
+  primary-foreground: "oklch(1 0 0)"
+  secondary: "oklch(0.967 0.001 286.375)"
+  secondary-foreground: "oklch(0.21 0.006 285.885)"
+  muted: "oklch(0.963 0.002 197.1)"
+  muted-foreground: "oklch(0.56 0.021 213.5)"
+  border: "oklch(0.925 0.005 214.3)"
+  ring: "oklch(0.723 0.014 214.4)"
 typography:
-  display:
-    fontFamily: "var(--font-bebas-neue), Impact, sans-serif"
-    fontSize: "clamp(2.375rem, 5vw, 3.3125rem)"
-    fontWeight: 400
-    lineHeight: 0.95
-    letterSpacing: "0.015em"
-  headline:
-    fontFamily: "var(--font-nunito), ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1.4375rem"
-    fontWeight: 800
-    lineHeight: 1.15
-  title:
-    fontFamily: "var(--font-nunito), ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1rem"
-    fontWeight: 800
-    lineHeight: 1.3
-  body:
-    fontFamily: "var(--font-nunito), ui-sans-serif, system-ui, sans-serif"
-    fontSize: "0.875rem"
-    fontWeight: 400
-    lineHeight: 1.5
-  label:
-    fontFamily: "var(--font-nunito), ui-sans-serif, system-ui, sans-serif"
-    fontSize: "0.6875rem"
-    fontWeight: 800
-    lineHeight: 1.2
-    letterSpacing: "0.04em"
+  family: "var(--font-sans), ui-sans-serif, system-ui, sans-serif"
+  headingWeight: 700
+  bodyWeight: 400
+  controlWeight: 500
 rounded:
-  sm: "9px"
-  md: "12px"
-  lg: "14px"
-  panel: "22px"
-  pill: "999px"
-spacing:
-  xs: "4px"
-  sm: "8px"
-  md: "12px"
-  lg: "20px"
-  xl: "28px"
-components:
-  button-primary:
-    backgroundColor: "{colors.monsoon-teal}"
-    textColor: "{colors.warm-white}"
-    typography: "{typography.body}"
-    rounded: "{rounded.md}"
-    padding: "14px 18px"
-    height: "48px"
-  button-secondary:
-    backgroundColor: "{colors.warm-white}"
-    textColor: "{colors.monsoon-teal}"
-    typography: "{typography.body}"
-    rounded: "{rounded.md}"
-    padding: "12px 16px"
-    height: "44px"
-  field-input:
-    backgroundColor: "{colors.warm-white}"
-    textColor: "{colors.field-ink}"
-    typography: "{typography.body}"
-    rounded: "{rounded.sm}"
-    padding: "0 11px"
-    height: "43px"
-  evidence-chip:
-    backgroundColor: "{colors.rice-paper}"
-    textColor: "{colors.weathered-slate}"
-    typography: "{typography.label}"
-    rounded: "{rounded.pill}"
-    padding: "6px 10px"
-  rotation-card:
-    backgroundColor: "{colors.warm-white}"
-    textColor: "{colors.field-ink}"
-    rounded: "{rounded.lg}"
-    padding: "16px"
+  base: "0.625rem"
+  sm: "calc(var(--radius) * 0.6)"
+  md: "calc(var(--radius) * 0.8)"
+  lg: "var(--radius)"
+  xl: "calc(var(--radius) * 1.4)"
 ---
 
 # Design System: Musim Field Shift
 
-## Overview
+## Source of truth
 
-**Creative North Star: "The Field Companion"**
+The sole interface system is shadcn preset `b7Br7G7Ci`: Maia components, Mist neutrals, Emerald actions, Inter typography, Lucide icons, medium radius, subtle menu accents, and the default menu color. `components.json`, shadcn primitives, and the CSS variables in `app/globals.css` are authoritative.
 
-Musim should feel like a trusted field notebook made more capable by satellite evidence: practical, calm, and easy to use with dusty hands or limited technical experience. Familiar farming language leads; scientific detail remains close at hand for people who want to inspect the evidence.
+Product identity comes from the farmer workflow, map context, language, and evidence. Visual decisions remain inside the preset system.
 
-The interface is warm and grounded rather than clinical. It uses generous touch targets, plain explanations, and a map that supports the decision instead of dominating it. Recommendations remain visibly uncertain and invite local validation, because the product supports farmer and adviser judgment rather than replacing it.
+## Principles
 
-**Key Characteristics:**
+- Put the farmer's decision before scientific detail.
+- Use familiar controls and plain language suitable for intermittent, outdoor use.
+- Keep one clear primary action in each step.
+- Reveal evidence progressively; never hide uncertainty or local validation needs.
+- Treat satellite observations as decision support, not ground truth.
 
-- Farmer priorities lead the scoring and explanation.
-- Warm paper surfaces sit over deep monsoon tones and living crop greens.
-- Evidence is layered from a plain-language takeaway to source and confidence detail.
-- Controls remain usable outdoors, on small screens, and without geospatial expertise.
-- Local knowledge is treated as a required input, not an afterthought.
+## Color
 
-## Colors
+Use only preset semantic tokens for interface styling:
 
-The palette pairs deep wet-season teals with rice-paper neutrals, young crop greens, and restrained weather signals.
+- `background` and `card` for working surfaces.
+- `foreground` for primary copy.
+- `muted` and `muted-foreground` for secondary structure and explanation.
+- `primary` and `primary-foreground` for the main action, selection, progress, and active states.
+- `secondary` for low-emphasis actions.
+- `border`, `input`, and `ring` for structure and keyboard focus.
+- `destructive` only for errors or genuinely destructive actions.
+- `chart-1` through `chart-5` for data visualization.
 
-### Primary
-
-- **Monsoon Teal:** The main action color and the anchor for high-trust controls.
-- **Deep Monsoon:** The map shell, navigation plate, and strongest contrast surface.
-
-### Secondary
-
-- **Young Paddy:** Selected states, progress, and positive field signals.
-- **Leaf Green:** Readable green text and supporting emphasis on light surfaces.
-
-### Tertiary
-
-- **Rain Blue:** Water and rainfall evidence.
-- **Heat Orange:** Heat stress, map pins, and cautionary environmental signals.
-
-### Neutral
-
-- **Field Ink:** Primary text and data labels.
-- **Weathered Slate:** Explanations, metadata, and secondary text.
-- **Rice Paper:** The page-level warm neutral.
-- **Paddy Husk:** Quiet dividers and unselected tracks.
-- **Warm White:** Cards, inputs, and high-clarity working surfaces.
-- **Field Line:** Low-contrast structural borders.
-
-**The Weather-Signal Rule.** Reserve blue and orange for environmental meaning; do not use them as arbitrary decoration.
+Color must communicate action, selection, status, or data.
 
 ## Typography
 
-**Display Font:** Bebas Neue (with Impact and sans-serif fallbacks)  
-**Body Font:** Nunito (with system sans-serif fallbacks)
+Inter is the only type family. Headings inherit the same family and establish hierarchy with size and weight.
 
-**Character:** Condensed display type gives the product a confident agricultural identity, while the rounded body face keeps instructions friendly and readable. Data labels are sturdy and compact, never cryptic.
+- Page title: 2.25–3rem, weight 700, tight but not below `-0.04em` tracking.
+- Section heading: 1.125–1.5rem, weight 600–700.
+- Body: 0.875–1rem, weight 400, line height 1.5.
+- Label and control: 0.75–0.875rem, weight 500–600.
+- Measurements use tabular numerals.
 
-### Hierarchy
+Avoid uppercase display styling and decorative font pairings.
 
-- **Display:** Reserved for the main step or results statement; keep it short and sentence-like.
-- **Headline:** Used for section decisions and important farmer-facing questions.
-- **Title:** Used for cards, scenarios, and compact content groups.
-- **Body:** Used for explanations and decision guidance; prefer short paragraphs and direct verbs.
-- **Label:** Used for categories and compact metadata; uppercase is acceptable only for short, scannable labels.
+## Shape and depth
 
-**The Plain-Language-First Rule.** State the field meaning before introducing an acronym such as NDVI or evapotranspiration, and explain the term where it appears.
-
-## Layout
-
-The core desktop composition is a fixed-width decision panel beside a full-field map. Results expand into a wider comparison surface while retaining map context. At tablet and mobile widths, controls stack, touch targets grow, and map callouts wrap within the viewport; no task depends on hover.
-
-Spacing follows a compact field-tool rhythm: tight grouping inside controls, moderate separation between related blocks, and a clear pause before the next decision. The four-step journey remains visible so farmers know how much work remains. Long place names and large area values must wrap rather than push controls off-screen.
-
-**The Decision-Before-Data Rule.** Lead each view with the choice or takeaway, then offer conditions, sources, and model detail progressively.
-
-## Elevation & Depth
-
-The system is flat by default. Warm surface changes and fine borders establish most hierarchy; a broad ambient shadow is reserved for panels and map overlays that must remain legible above satellite imagery. Interactive elements use small movement and color shifts, not stacks of decorative shadows.
-
-### Shadow Vocabulary
-
-- **Map Ambient:** A broad, cool shadow for the primary panel and floating map evidence.
-- **Marker Lift:** A compact shadow used only to separate the field marker from varied imagery.
-
-**The Map-Only-Glass Rule.** Translucency and backdrop blur belong to controls over imagery; content cards stay opaque and easy to read.
-
-## Shapes
-
-Working controls use gently rounded corners, cards use a slightly softer radius, and the main panel uses a generous but still practical corner. Pills are limited to status chips, tabs, and compact metadata. Borders are complete outlines; avoid decorative left-edge stripes that can be mistaken for status severity.
+The base radius is `0.625rem`. Use preset radius derivatives consistently; pills are reserved for compact controls and statuses. Cards rely on borders and surface contrast. A soft shadow is allowed only where a panel must separate from map imagery.
 
 ## Components
 
-### Buttons
+Use the generated primitives in `components/ui`:
 
-- **Shape:** Substantial rounded rectangles with a minimum comfortable touch height.
-- **Primary:** Deep teal with warm-white text; use one clear primary action per decision area.
-- **Hover / Focus:** A subtle lift or tone change on hover and a highly visible amber focus outline for keyboard use.
-- **Secondary:** Warm white with teal text and a quiet field-line border.
+- `Button` for primary, secondary, outline, ghost, destructive, and icon actions.
+- `Tabs` for field selection modes and result views.
+- `Select` for location and farm-detail choices.
+- `Slider` for farmer priority weights.
+- `Dialog` for focused information.
+- `Sheet` for save and share actions.
 
-### Chips
+Use Lucide for every interface icon. Do not embed a second icon library or hand-draw replacement glyphs.
 
-- **Style:** Compact paper-toned pills for evidence type, confidence, or status.
-- **State:** Selected states use crop green or monsoon teal and always retain readable text contrast.
+## Workflow
 
-### Cards / Containers
+Each of the four steps contains one heading, one short instruction, one control group, and one primary action. Keep progress visible without turning it into decoration. Preserve a point-estimate path for farmers who cannot draw a boundary.
 
-- **Corner Style:** Soft, consistent corners with a complete low-contrast border.
-- **Background:** Opaque warm white for reading; paper tones for nested supporting detail.
-- **Shadow Strategy:** Flat inside the decision panel; ambient lift only when floating over the map.
-- **Internal Padding:** Enough room to separate the takeaway, evidence, and action without wasting small-screen space.
+Results lead with the practical takeaway, then expose field conditions, rotation options, evidence, confidence, and source timing. Recommendations must state trade-offs and where farmer or agronomist judgment is required.
 
-### Inputs / Fields
+## Accessibility and responsive behavior
 
-- **Style:** Warm-white fill, clear border, direct farmer-facing label, and no placeholder-only instructions.
-- **Focus:** Amber outline with offset so focus remains visible against both paper and map surfaces.
-- **Unknown Values:** Offer an explicit “not sure” path and explain how local verification will be used.
-
-### Navigation
-
-The four-step progress indicator uses crop green for completed and active work. Results tabs name farmer tasks—field conditions and rotation options—rather than internal data structures, and expose selected state through text, color, and semantics.
-
-### Rotation Card
-
-Each option begins with its role in the rotation and a plain-language fit score, then explains benefits, trade-offs, uncertainty, and the evidence behind the score. The recommended treatment is visually stronger but never hides alternatives or local caveats.
-
-## Do's and Don'ts
-
-### Do:
-
-- **Do** let farmers set water, equipment, market, and soil priorities before scoring rotations.
-- **Do** pair satellite indicators with ground observations and clearly label confidence and data age.
-- **Do** translate scientific measures into a field consequence, then allow the farmer to inspect the technical term.
-- **Do** keep essential controls at least comfortable touch size and readable in bright outdoor conditions.
-- **Do** identify exactly where an agronomist, extension officer, or farmer should validate the recommendation.
-
-### Don't:
-
-- **Don't** present model outputs as prescriptions or conceal uncertainty behind a single score.
-- **Don't** make map drawing the only path; preserve a quick point estimate for farmers without field boundaries.
-- **Don't** rely on color alone to communicate stress, confidence, selection, or recommendation.
-- **Don't** crowd the first view with raw datasets, unexplained acronyms, or competing primary actions.
-- **Don't** use decorative gradients, excessive glass effects, or tiny metadata that weakens field readability.
+- Maintain at least 44px touch targets for critical actions.
+- Preserve visible preset focus rings.
+- Do not rely on color alone for selection or status.
+- Use labels in addition to placeholders.
+- Allow long locations, measurements, and translated text to wrap.
+- On small screens, stack the workflow above the map and keep actions reachable without horizontal scrolling.
+- Respect reduced-motion preferences.
