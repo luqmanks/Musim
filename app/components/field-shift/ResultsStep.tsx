@@ -416,6 +416,18 @@ function RotationCard({
         </div>
       </details>
 
+      <section className="evidence-details" aria-labelledby={`rotation-${result.id}-simple`}>
+        <div className="evidence-body pt-4">
+          <h4 id={`rotation-${result.id}-simple`}>Simplified reasoning</h4>
+          <p>{result.simplified.reason}</p>
+          <h4>Quick local checks</h4>
+          <ul>
+            {result.simplified.checks.map((check) => <li key={check}>{check}</li>)}
+          </ul>
+          {result.gaps.length > 0 && <p className="text-muted-foreground">Still to confirm: {result.gaps.join("; ")}.</p>}
+        </div>
+      </section>
+
       <CardFooter>
         <Badge
           variant="secondary"

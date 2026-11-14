@@ -84,6 +84,7 @@ export type RotationScore = {
   gaps: string[];
   confidence: "High" | "Moderate" | "Low";
   confidenceReason: string;
+  simplified: { reason: string; checks: string[] };
 };
 
 export const CROPS = CROP_REFERENCE.map(({ id, label }) => ({ id, label }));
@@ -343,6 +344,22 @@ export function buildRotationResults(
     });
     if (!isCurrent && !robust) risks.push("The advantage over your current rotation disappears in at least one of the driest, wettest or hottest observed years.");
 
+    const strongest = [...PRIORITY_KEYS].sort((a, b) => ev.scores[b] - ev.scores[a])[0];
+    const gains = PRIORITY_KEYS
+      .filter((key) => ev.scores[key] > currentEval.scores[key])
+      .sort((a, b) => (ev.scores[b] - currentEval.scores[b]) * priorities[b] - (ev.scores[a] - currentEval.scores[a]) * priorities[a])
+      .slice(0, 2);
+    const simpleChecks: string[] = [];
+    ev.evals.forEach((e) => {
+      const when = `${e.crop.label} (${e.season.window})`;
+      if (e.deficitMm > 0) simpleChecks.push(`${when}: confirm extra water is available.`);
+      if (e.excessMm > 0) simpleChecks.push(`${when}: check drainage for heavy rain.`);
+      if (e.tempFit < 1) simpleChecks.push(`${when}: check if local temperatures suit the crop.`);
+      if (e.equipmentOk === false) simpleChecks.push(`${when}: confirm access to ${e.crop.equipment} equipment.`);
+      if (!isCurrent && e.crop.yields && !profile.rotation.includes(e.crop.id) && (profile.market === "limited" || profile.market === "unknown")) simpleChecks.push(`${when}: find a buyer before planting.`);
+    });
+    if (!isCurrent && !robust) simpleChecks.push("This option may lose its advantage in extreme weather years.");
+
     return {
       id, label, descriptor,
       crops: ev.crops,
@@ -355,6 +372,14 @@ export function buildRotationResults(
       risks: risks.length ? risks : ["No water, temperature or drainage conflict found against the NASA climate. Confirm locally."],
       gaps,
       confidence,
+      simplified: {
+        reason: isCurrent
+          ? `Your baseline is strongest for ${PRIORITY_LABEL[strongest].toLowerCase()}.`
+          : gains.length
+            ? `Improves ${gains.map((key) => PRIORITY_LABEL[key].toLowerCase()).join(" and ")} compared with your current rotation.`
+            : "No individual goal scores better than your current rotation.",
+        checks: simpleChecks.length ? simpleChecks : ["No climate conflicts flagged; confirm field conditions locally."],
+      },
       confidenceReason: `${gaps.length} information gap${gaps.length === 1 ? "" : "s"}; ${mismatches} season${mismatches === 1 ? "" : "s"} where the NASA climate doesn't fully meet the crop; ${isCurrent ? "baseline for comparison" : robust ? "still ahead of today's rotation in the driest, wettest and hottest observed years" : "not ahead of today's rotation in every observed stress year"}.`,
     };
   };
