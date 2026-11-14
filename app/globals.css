@@ -405,12 +405,12 @@ h1, h2, h3 { font-family: var(--font-sans); text-wrap: balance; scroll-margin-to
 .toast { position: fixed; z-index: 60; left: 50%; bottom: 24px; transform: translateX(-50%); padding: 11px 17px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); color: var(--foreground); font-size: 12px; }
 
 @media (min-width: 721px) {
-  .step-locate { --setup-panel-width: min(500px, 46vw); --map-controls-inset: calc(var(--setup-panel-width) + 36px); }
-  .step-locate .workspace-panel { width: var(--setup-panel-width); margin-left: auto; margin-right: 18px; }
+  .app-shell:not(.step-results) { --setup-panel-width: min(500px, 46vw); --map-controls-inset: calc(var(--setup-panel-width) + 36px); }
+  .app-shell:not(.step-results) .workspace-panel { width: var(--setup-panel-width); margin-left: auto; margin-right: 18px; }
   .step-locate .map-overlay-stack { top: 96px; left: 18px; width: min(390px, calc(100vw - var(--setup-panel-width) - 54px)); gap: 18px; }
-  .app-shell.step-locate .topbar { top: 18px; right: var(--map-controls-inset); height: 60px; padding: 0 0 0 18px; align-items: flex-start; }
-  .step-locate .field-map .maplibregl-ctrl-bottom-left { left: 18px !important; }
-  .step-locate .maplibregl-ctrl-bottom-right { right: var(--map-controls-inset); }
+  .app-shell:not(.step-results) .topbar { top: 18px; right: var(--map-controls-inset); height: 60px; padding: 0 0 0 18px; align-items: flex-start; }
+  .app-shell:not(.step-results) .field-map .maplibregl-ctrl-bottom-left { left: 18px !important; }
+  .app-shell:not(.step-results) .maplibregl-ctrl-bottom-right { right: var(--map-controls-inset); }
 }
 
 @media (max-width: 1050px) {
