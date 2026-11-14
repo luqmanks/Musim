@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ADVISOR_HEADINGS } from "../lib/advisor";
 import { CROPS } from "../lib/cropRules";
 import type { FarmProfile } from "../lib/field-shift";
@@ -110,12 +111,13 @@ export default function AiAdvisor({
         <span className="source-chip">Gemini · Vertex AI</span>
       </div>
       <form onSubmit={ask} className="advisor-form">
-        <label className="field-label">
-          Crop
-          <select className="select-control" name="advisor-crop" value={cropId} onChange={(e) => onCropChange(e.target.value)}>
-            {CROPS.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </label>
+        <div className="field-label">
+          <span>Crop</span>
+          <Select name="advisor-crop" value={cropId} onValueChange={onCropChange}>
+            <SelectTrigger className="shadcn-select"><SelectValue /></SelectTrigger>
+            <SelectContent>{CROPS.map((cropOption) => <SelectItem key={cropOption.id} value={cropOption.id}>{cropOption.name}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
         <label className="field-label">
           Your question (optional)
           <input
