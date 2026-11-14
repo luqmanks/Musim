@@ -1,0 +1,22 @@
+[
+  {
+    "id": "demo-a",
+    "name": "Demo farm A (sample)",
+    "center": [
+      101.18,
+      3.43
+    ],
+    "zoom": 12,
+    "scene": "/data/farms/demo-a/ecostress.json"
+  },
+  {
+    "id": "demo-b",
+    "name": "Demo farm B (sample)",
+    "center": [
+      100.4,
+      6.1
+    ],
+    "zoom": 12,
+    "scene": "/data/farms/demo-b/ecostress.json"
+  }
+]

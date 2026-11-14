@@ -1,0 +1,21 @@
+{
+  "isMock": true,
+  "product": "ECO_L2T_LSTE v002",
+  "farmId": "demo-b",
+  "acquired": "2026-11-05T04:48:00Z",
+  "bounds": [
+    100.37,
+    6.07,
+    100.43,
+    6.13
+  ],
+  "image": "/data/farms/demo-b/ecostress-lst.png",
+  "minC": 25,
+  "maxC": 42,
+  "clearFraction": 0.94,
+  "hottest": {
+    "lng": 100.38031,
+    "lat": 6.10719,
+    "tempC": 40.9
+  }
+}
