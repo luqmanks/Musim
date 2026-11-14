@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { ClimateSummary, FieldLocation, RotationScore } from "../../lib/field-shift";
@@ -42,8 +43,8 @@ export function AppOverlays({ infoOpen, shareOpen, location, climate, results, t
             <SheetDescription>Take the plan to a local expert before changing your rotation.</SheetDescription>
           </SheetHeader>
           <div className="share-content">
-            <div className="report-preview"><Brand /><span>{location?.name}</span><strong>{results[1]?.descriptor ?? "Rotation comparison"}</strong><small>{climate?.source} · {climate?.period}</small></div>
-            {expertChecks.length > 0 && <div className="expert-checklist"><h3>Check locally</h3><ul>{expertChecks.map((item) => <li key={item}>{item}</li>)}</ul></div>}
+            <Card className="report-preview"><Brand /><span>{location?.name}</span><strong>{results[1]?.descriptor ?? "Rotation comparison"}</strong><small>{climate?.source} Â· {climate?.period}</small></Card>
+            {expertChecks.length > 0 && <Card className="expert-checklist"><h3>Check locally</h3><ul>{expertChecks.map((item) => <li key={item}>{item}</li>)}</ul></Card>}
           </div>
           <SheetFooter>
             <Button type="button" onClick={() => window.print()}>Print or save as PDF</Button>
