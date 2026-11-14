@@ -44,6 +44,7 @@ const MARKET_CHOICES = [
 export function FarmDetailsStep({ question, profile, setProfile, onNext }: FarmDetailsStepProps) {
   return (
     <div className="question-content">
+      <div className="step-scroll">
       {question === 0 && (
         <>
           <h2>What is your current rotation?</h2><p>Choose up to three consecutive seasons.</p>
@@ -83,6 +84,7 @@ export function FarmDetailsStep({ question, profile, setProfile, onNext }: FarmD
           </label>
         </>
       )}
+      </div>
 
       <div className="question-actions step-footer">
         <Button variant="ghost" size="lg" type="button" onClick={onNext}>Skip</Button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ADVISOR_HEADINGS } from "../lib/advisor";
 import { CROPS } from "../lib/cropRules";
@@ -112,9 +113,9 @@ export default function AiAdvisor({
       </div>
       <form onSubmit={ask} className="advisor-form">
         <div className="field-label">
-          <span>Crop</span>
+          <label htmlFor="advisor-crop">Crop</label>
           <Select name="advisor-crop" value={cropId} onValueChange={onCropChange}>
-            <SelectTrigger className="shadcn-select"><SelectValue /></SelectTrigger>
+            <SelectTrigger id="advisor-crop" className="shadcn-select"><SelectValue /></SelectTrigger>
             <SelectContent>{CROPS.map((cropOption) => <SelectItem key={cropOption.id} value={cropOption.id}>{cropOption.name}</SelectItem>)}</SelectContent>
           </Select>
         </div>
@@ -129,14 +130,14 @@ export default function AiAdvisor({
           />
         </label>
         <div className="advisor-actions">
-          <button type="submit" className="primary-button" disabled={busy}>
+          <Button type="submit" disabled={busy}>
             {busy ? "Analysing…" : status === "idle" ? "Analyse this field" : "Ask again"}
-          </button>
+          </Button>
           {busy && (
-            <button type="button" className="secondary-button"
+            <Button type="button" variant="outline"
               onClick={() => { ctrl.current?.abort(); setStatus(text ? "done" : "idle"); }}>
               Stop
-            </button>
+            </Button>
           )}
         </div>
       </form>

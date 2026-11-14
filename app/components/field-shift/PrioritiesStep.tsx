@@ -13,7 +13,8 @@ type PrioritiesStepProps = {
 export function PrioritiesStep({ priorities, setPriorities, onCompare }: PrioritiesStepProps) {
   return (
     <div className="priority-content">
-      <p className="step-note">Set what matters most. This changes how each rotation is ranked.</p>
+      <div className="step-scroll">
+      <p className="step-note">Higher priorities have more influence on the rotation scores.</p>
       <div className="priority-list">
         {PRIORITIES.map((priority) => {
           const value = priorities[priority.key];
@@ -26,6 +27,7 @@ export function PrioritiesStep({ priorities, setPriorities, onCompare }: Priorit
             </div>
           );
         })}
+      </div>
       </div>
       <div className="step-footer"><Button className="step-primary" size="lg" type="button" onClick={onCompare}>Compare rotations</Button></div>
     </div>

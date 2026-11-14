@@ -1,5 +1,5 @@
-import FieldShiftApp from "./components/FieldShiftApp";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return <FieldShiftApp />;
+  redirect("/field");
 }

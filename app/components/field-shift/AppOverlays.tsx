@@ -1,24 +1,17 @@
 ﻿import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import type { ClimateSummary, FieldLocation, RotationScore } from "../../lib/field-shift";
-import { Brand } from "./SharedUi";
+import { FieldPlanReport, type FieldPlanReportProps } from "./FieldPlanReport";
 
-type AppOverlaysProps = {
+type AppOverlaysProps = FieldPlanReportProps & {
   infoOpen: boolean;
   shareOpen: boolean;
-  location: FieldLocation | null;
-  climate: ClimateSummary | null;
-  results: RotationScore[];
   toast: string;
   onCloseInfo: () => void;
   onCloseShare: () => void;
-  onCopyLink: () => void;
 };
 
-export function AppOverlays({ infoOpen, shareOpen, location, climate, results, toast, onCloseInfo, onCloseShare, onCopyLink }: AppOverlaysProps) {
-  const expertChecks = Array.from(new Set(results.flatMap((result) => [...result.risks, ...result.gaps]))).slice(0, 5);
+export function AppOverlays({ infoOpen, shareOpen, location, climate, results, toast, onCloseInfo, onCloseShare, profile, priorities, scenario }: AppOverlaysProps) {
 
   return (
     <>
@@ -39,16 +32,15 @@ export function AppOverlays({ infoOpen, shareOpen, location, climate, results, t
       <Sheet open={shareOpen} onOpenChange={(open) => { if (!open) onCloseShare(); }}>
         <SheetContent className="share-drawer">
           <SheetHeader>
-            <SheetTitle>Save this field comparison</SheetTitle>
-            <SheetDescription>Take the plan to a local expert before changing your rotation.</SheetDescription>
+            <SheetTitle>Share your field plan</SheetTitle>
+            <SheetDescription>Save a comparison to review with your farm adviser.</SheetDescription>
           </SheetHeader>
           <div className="share-content">
-            <Card className="report-preview"><Brand /><span>{location?.name}</span><strong>{results[1]?.descriptor ?? "Rotation comparison"}</strong><small>{climate?.source} Â· {climate?.period}</small></Card>
-            {expertChecks.length > 0 && <Card className="expert-checklist"><h3>Check locally</h3><ul>{expertChecks.map((item) => <li key={item}>{item}</li>)}</ul></Card>}
+            {results.length ? <FieldPlanReport location={location} climate={climate} results={results} profile={profile} priorities={priorities} scenario={scenario} /> : <p>Load climate data to generate your comparison before saving.</p>}
           </div>
           <SheetFooter>
-            <Button type="button" onClick={() => window.print()}>Print or save as PDF</Button>
-            <Button variant="outline" type="button" onClick={onCopyLink}>Copy app link</Button>
+            <Button type="button" disabled={!results.length} onClick={() => window.print()}>Save as PDF</Button>
+            <p className="share-note">Choose Save as PDF in the print window. Includes your farm details, priorities, seasonal rotation plans, scores, local checks and climate data.</p>
           </SheetFooter>
         </SheetContent>
       </Sheet>

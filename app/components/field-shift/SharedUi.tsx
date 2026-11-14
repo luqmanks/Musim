@@ -41,11 +41,13 @@ export function StepProgress({ step }: { step: Step }) {
   const active = step === "locate" ? 1 : step === "details" ? 2 : step === "priorities" ? 3 : 4;
 
   return (
-    <div className="journey-progress" aria-label={`Step ${active} of 4`}>
-      <span>Step {active} of 4</span>
-      <div className="journey-track" role="progressbar" aria-valuemin={1} aria-valuemax={4} aria-valuenow={active}>
-        <i style={{ width: `${active * 25}%` }} />
-      </div>
-    </div>
+    <nav className="setup-progress" aria-label={`Step ${active} of 4`}>
+      <ol>{["Field", "Farm details", "Priorities", "Plan"].map((label, index) => (
+        <li key={label} data-state={index + 1 < active ? "complete" : index + 1 === active ? "current" : "upcoming"} aria-current={index + 1 === active ? "step" : undefined}>
+          <span className="setup-progress-mark">{index + 1 < active ? <Check className="size-3" aria-hidden="true" /> : index + 1}</span>
+          <span>{label}</span>
+        </li>
+      ))}</ol>
+    </nav>
   );
 }

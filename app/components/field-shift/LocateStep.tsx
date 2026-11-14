@@ -42,6 +42,7 @@ export function LocateStep({
 }: LocateStepProps) {
   return (
     <div className="locate-content">
+      <div className="step-scroll">
       <Tabs value={selectionMode} onValueChange={(value) => onChooseSelectionMode(value as SelectionMode)}>
         <TabsList className="selection-mode" aria-label="Field selection method">
           <TabsTrigger value="boundary" className="selection-mode-trigger">
@@ -105,6 +106,7 @@ export function LocateStep({
           </div>
         </Card>
       )}
+      </div>
       <div className="step-footer">
         <Button className="step-primary" size="lg" type="button" disabled={!canContinue} onClick={onContinue}>
           {selectionMode === "boundary" ? "Use this field area" : "Use this location"}

@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { plannerSessionSchema, PLANNER_SESSION_KEY } from "../lib/planner-session";
 import { Button } from "@/components/ui/button";
 import FieldMap, { type ImageryStatus, type MapLayerKey, type SelectionMode } from "./FieldMap";
 import {
@@ -24,8 +26,21 @@ import { ResultsStep } from "./field-shift/ResultsStep";
 import { Brand, Icon, StepProgress } from "./field-shift/SharedUi";
 
 export default function FieldShiftApp() {
-  const [step, setStep] = useState<Step>("locate");
-  const [detailQuestion, setDetailQuestion] = useState(0);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const step: Step = pathname.startsWith("/dashboard/") ? "results" : pathname === "/farm-details" ? "details" : pathname === "/priorities" ? "priorities" : "locate";
+  const resultTab: ResultTab = pathname === "/dashboard/climate" ? "conditions" : pathname === "/dashboard/recent-conditions" ? "crops" : "rotations";
+  const questionParam = Number(searchParams.get("question") ?? 1);
+  const detailQuestion = Number.isInteger(questionParam) ? Math.max(0, Math.min(3, questionParam - 1)) : 0;
+  const [sessionReady, setSessionReady] = useState(false);
+  function setStep(next: Step) {
+    router.push({ locate: "/field", details: "/farm-details", priorities: "/priorities", results: "/dashboard/rotations" }[next]);
+  }
+  function setDetailQuestion(next: number) { router.push(`/farm-details?question=${next + 1}`); }
+  function setResultTab(next: ResultTab) {
+    router.push({ rotations: "/dashboard/rotations", conditions: "/dashboard/climate", crops: "/dashboard/recent-conditions" }[next]);
+  }
   const [location, setLocation] = useState<FieldLocation | null>(null);
   const [mapFocus, setMapFocus] = useState<FieldLocation | null>(null);
   const [locating, setLocating] = useState(false);
@@ -34,7 +49,6 @@ export default function FieldShiftApp() {
   const [climate, setClimate] = useState<ClimateSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [climateError, setClimateError] = useState("");
-  const [resultTab, setResultTab] = useState<ResultTab>("conditions");
   const [scenario, setScenario] = useState<ScenarioKey>("typical");
   const [mapLayer, setMapLayer] = useState<MapLayerKey>("base");
   const [selectionMode, setSelectionMode] = useState<SelectionMode>("boundary");
@@ -42,6 +56,54 @@ export default function FieldShiftApp() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    // Restore only validated inputs; climate is fetched afresh after a reload.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    try {
+      const saved = plannerSessionSchema.safeParse(JSON.parse(sessionStorage.getItem(PLANNER_SESSION_KEY) ?? "null"));
+      if (saved.success) {
+        setLocation(saved.data.location);
+        setProfile(saved.data.profile);
+        setPriorities(saved.data.priorities);
+        setScenario(saved.data.scenario);
+        setSelectionMode(saved.data.selectionMode);
+      }
+    } catch { /* Storage may be unavailable in private browsing. */ }
+    setSessionReady(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+
+  useEffect(() => {
+    if (!sessionReady) return;
+    try { sessionStorage.setItem(PLANNER_SESSION_KEY, JSON.stringify({ location, profile, priorities, scenario, selectionMode })); }
+    catch { /* Navigation still works without persistent storage. */ }
+  }, [sessionReady, location, profile, priorities, scenario, selectionMode]);
+
+  const fieldReady = Boolean(location && (selectionMode === "pin" || (location.boundary?.length ?? 0) >= 3));
+  useEffect(() => {
+    if (sessionReady && step !== "locate" && !fieldReady) router.replace("/field");
+  }, [sessionReady, step, fieldReady, router]);
+
+  useEffect(() => {
+    if (!sessionReady || step !== "results" || !fieldReady || !location) return;
+    const controller = new AbortController();
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setLoading(true);
+    setClimate(null);
+    setClimateError("");
+    /* eslint-enable react-hooks/set-state-in-effect */
+    fetch(`/api/nasa/power?lat=${location.lat}&lng=${location.lng}`, { signal: controller.signal })
+      .then(async (response) => {
+        const body = await response.json();
+        if (!response.ok) throw new Error(body?.error ?? "Climate service unavailable");
+        return body;
+      })
+      .then(setClimate)
+      .catch((error: unknown) => { if (!controller.signal.aborted) setClimateError(error instanceof Error ? error.message : "Climate data could not be loaded."); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [sessionReady, step, fieldReady, location]);
 
   const results = useMemo(
     () => climate ? buildRotationResults(profile, priorities, climate, scenario) : [],
@@ -101,42 +163,24 @@ export default function FieldShiftApp() {
   }
 
   function goBack() {
-    if (step === "details" && detailQuestion > 0) setDetailQuestion((value) => value - 1);
+    if (step === "details" && detailQuestion > 0) setDetailQuestion(detailQuestion - 1);
     else if (step === "details") setStep("locate");
     else if (step === "priorities") {
-      setStep("details");
       setDetailQuestion(3);
     } else if (step === "results") setStep("priorities");
   }
 
   function nextDetail() {
-    if (detailQuestion < 3) setDetailQuestion((value) => value + 1);
+    if (detailQuestion < 3) setDetailQuestion(detailQuestion + 1);
     else setStep("priorities");
   }
 
-  async function compareRotations() {
-    if (!location) return;
-    setStep("results");
-    setLoading(true);
-    setClimate(null);
-    setClimateError("");
-    setResultTab("conditions");
-    try {
-      const response = await fetch(`/api/nasa/power?lat=${location.lat}&lng=${location.lng}`);
-      const body = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(body?.error ?? "Climate service unavailable");
-      setClimate(body);
-    } catch (error) {
-      setClimateError(error instanceof Error ? error.message : "Climate data could not be loaded.");
-    } finally {
-      setLoading(false);
-    }
+  function compareRotations() {
+    if (fieldReady) setStep("results");
   }
 
-  function copyLink() {
-    navigator.clipboard?.writeText(window.location.href);
-    setToast("App link copied");
-    window.setTimeout(() => setToast(""), 2400);
+  if (!sessionReady || (step !== "locate" && !fieldReady)) {
+    return <div className="p-6 text-sm text-muted-foreground" role="status">Opening your field plan…</div>;
   }
 
   return (
@@ -154,13 +198,12 @@ export default function FieldShiftApp() {
 
       {step === "locate" && <MapGuidanceOverlay boundaryPoints={boundaryPoints} location={location} selectionMode={selectionMode} />}
 
-      <header className="topbar">
+      {step !== "results" && <header className="topbar">
         <Brand />
         <div className="top-actions">
           <Button className="icon-button" variant="ghost" size="icon" type="button" onClick={() => setInfoOpen(true)} aria-label="About this tool"><Icon name="info" /></Button>
-          {step === "results" && <Button className="share-button" type="button" onClick={() => setShareOpen(true)}><Icon name="share" /> Share</Button>}
         </div>
-      </header>
+      </header>}
 
       <section id="workspace" className={`workspace-panel ${step === "results" ? "results-panel" : ""}`} aria-labelledby="panel-title">
         {step !== "results" && <StepProgress step={step} />}
@@ -198,12 +241,12 @@ export default function FieldShiftApp() {
             climate={climate}
             loading={loading}
             error={climateError}
-            onRetry={compareRotations}
             resultTab={resultTab}
             scenario={scenario}
             results={results}
             profile={profile}
             onEdit={() => setStep("details")}
+            onShare={() => setShareOpen(true)}
             onTabChange={setResultTab}
             onScenarioChange={setScenario}
           />
@@ -220,7 +263,9 @@ export default function FieldShiftApp() {
         toast={toast}
         onCloseInfo={() => setInfoOpen(false)}
         onCloseShare={() => setShareOpen(false)}
-        onCopyLink={copyLink}
+        profile={profile}
+        priorities={priorities}
+        scenario={scenario}
       />
     </main>
   );

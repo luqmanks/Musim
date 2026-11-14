@@ -4,11 +4,15 @@
 // this branch's crop stress rules for every crop, and the Gemini field advisor.
 
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ChevronDown } from "lucide-react";
 import { CROPS, evaluate, type CropAlert, type CropProfile } from "../../lib/cropRules";
 import type { FarmProfile, FieldLocation } from "../../lib/field-shift";
-import { fetchPowerDaily, lastN, toCsv, type PowerData, type PowerParam } from "../../lib/power";
-import AiAdvisor from "../AiAdvisor";
+import { fetchPowerDaily, lastN, type PowerData, type PowerParam } from "../../lib/power";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DailyChart from "../DailyChart";
+import AiAdvisor from "../AiAdvisor";
 
 const FETCH_DAYS = 90;
 const RANGES = [30, 90] as const;
@@ -85,14 +89,6 @@ export function CropCheckTab({ location, profile }: { location: FieldLocation; p
 
   const chartCrop: CropProfile = CROPS.find((c) => c.id === advisorCrop) ?? CROPS[0];
 
-  function downloadCsv() {
-    if (!data) return;
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([toCsv(data)], { type: "text/csv" }));
-    a.download = `nasa-power_${data.lat}_${data.lng}_${data.dates[0]}_${data.dates.at(-1)}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
 
   if (!current) {
     return (
@@ -114,9 +110,17 @@ export function CropCheckTab({ location, profile }: { location: FieldLocation; p
   const good = ranking.filter((r) => r.verdict === "good").map((r) => r.crop.name);
 
   return (
-    <div id="crops-panel" className="crop-check-view" role="tabpanel" aria-labelledby="crops-tab">
+    <div className="crop-check-view">
+      <div className="dashboard-section-header dashboard-wide"><div><h2>Recent growing conditions</h2><p className="text-sm text-muted-foreground">Crop checks use the last {FETCH_DAYS} days. Change the chart range to inspect a shorter period.</p></div></div>
+      <AiAdvisor
+        lat={location.lat}
+        lng={location.lng}
+        cropId={advisorCrop}
+        onCropChange={setAdvisorCrop}
+        profile={profile}
+      />
       <div className="crop-check-col">
-        <section className="crop-check-card" aria-labelledby="suit-title">
+        <Card className="crop-check-card" aria-labelledby="suit-title">
           <div className="section-heading compact">
             <div>
               <h3 id="suit-title">Which crops suit this field right now?</h3>
@@ -134,6 +138,7 @@ export function CropCheckTab({ location, profile }: { location: FieldLocation; p
                       <small>{alerts.length ? alerts.map((a) => a.title).slice(0, 2).join(" · ") : "No stress signals in recent data"}</small>
                     </span>
                     <span className="suit-badge"><i aria-hidden="true" />{VERDICT_LABEL[verdict]}</span>
+                    <ChevronDown className="suit-chevron size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                   </summary>
                   <div className="suit-body">
                     <p>{crop.note}</p>
@@ -141,31 +146,26 @@ export function CropCheckTab({ location, profile }: { location: FieldLocation; p
                       <div key={a.id} className="suit-alert">
                         <strong>{a.level === "warning" ? "Warning" : "Watch"}: {a.title}</strong>
                         <span>{a.detail}</span>
-                        <em>→ {a.action}</em>
+                        <em>{a.action}</em>
                         <small>Data up to {fmtDate(a.asOf)}</small>
                       </div>
                     ))}
-                    <button type="button" className="edit-button" onClick={() => setAdvisorCrop(crop.id)}>
-                      Ask the advisor about {crop.name.toLowerCase()}
-                    </button>
                   </div>
                 </details>
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
         <div className="insight-callout">
-          <span aria-hidden="true">↳</span>
           <p>
             <strong>{good.length ? `Recent conditions suit ${good.join(", ")}.` : "Every crop shows at least one stress signal right now."}</strong>{" "}
             This reflects the past {FETCH_DAYS} days, not a forecast. Combine it with the rotation options and the season rhythm.
           </p>
         </div>
-        <AiAdvisor lat={location.lat} lng={location.lng} cropId={advisorCrop} onCropChange={setAdvisorCrop} profile={profile} />
       </div>
 
       <div className="crop-check-col">
-        <section className="crop-check-card" aria-labelledby="recent-title">
+        <Card className="crop-check-card" aria-labelledby="recent-title">
           <div className="section-heading compact">
             <div>
               <h3 id="recent-title">Recent field weather</h3>
@@ -173,9 +173,16 @@ export function CropCheckTab({ location, profile }: { location: FieldLocation; p
             </div>
             <div className="range-toggle" role="group" aria-label="Chart range">
               {RANGES.map((r) => (
-                <button key={r} type="button" aria-pressed={r === days} onClick={() => setDays(r)}>{r} days</button>
+                <Button key={r} variant={r === days ? "secondary" : "ghost"} size="sm" type="button" aria-pressed={r === days} onClick={() => setDays(r)}>{r} days</Button>
               ))}
             </div>
+          </div>
+          <div className="field-label">
+            <label htmlFor="chart-crop">Crop used for chart thresholds</label>
+            <Select value={advisorCrop} onValueChange={setAdvisorCrop}>
+              <SelectTrigger id="chart-crop" className="shadcn-select"><SelectValue /></SelectTrigger>
+              <SelectContent>{CROPS.map((crop) => <SelectItem key={crop.id} value={crop.id}>{crop.name}</SelectItem>)}</SelectContent>
+            </Select>
           </div>
           <div className="metric-row compact">
             <div><span>Air temperature</span><strong>{fmt(latest(data, "T2M").value)} <small>°C</small></strong><em>as of {fmtDate(latest(data, "T2M").date)}</em></div>
@@ -207,9 +214,9 @@ export function CropCheckTab({ location, profile }: { location: FieldLocation; p
             ]} />
           <p className="source-line">
             Thresholds on the charts are for {chartCrop.name.toLowerCase()}. Source: NASA POWER daily point API
-            (community AG), on a grid about 50 km wide. <button type="button" className="edit-button" onClick={downloadCsv}>Download CSV</button>
+            (community AG), on a grid about 50 km wide.
           </p>
-        </section>
+        </Card>
       </div>
 
       <p className="decision-note">
