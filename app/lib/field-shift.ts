@@ -13,6 +13,8 @@ export type FieldLocation = {
   lng: number;
   name: string;
   farmId?: string;
+  boundary?: [lng: number, lat: number][];
+  areaHectares?: number;
 };
 
 export type FarmProfile = {

@@ -14,10 +14,10 @@ shows its evidence, assumptions, risks, information gaps, and confidence.
 
 ## V1 experience
 
-1. Select a Malaysian field by pin or demo farm.
+1. Draw a field boundary, place one point, or open a Malaysian demo farm.
 2. Describe the current crop sequence, soil, water, equipment, and market.
 3. Weight water, soil health, income, erosion, nitrogen, and practicality.
-4. Review a 2021–2025 climate profile and NASA map evidence.
+4. Review a 2021–2025 climate profile and dated NASA map evidence.
 5. Compare three rotations under typical, drier, wetter, and +1 °C sensitivity
    scenarios.
 6. Print an expert-handoff summary with risks and unanswered questions.
@@ -27,9 +27,21 @@ shows its evidence, assumptions, risks, information gaps, and confidence.
 | Resource | V1 use | Important limitation |
 | --- | --- | --- |
 | [NASA POWER Daily API](https://power.larc.nasa.gov/docs/services/api/temporal/daily/) | Live five-year rainfall, temperature, humidity, and solar profile | Regional grid context, not an on-field weather station |
-| [NASA SMAP via EOSDIS GIBS](https://gibs.earthdata.nasa.gov/) | Daily regional surface-soil-moisture map | About 9 km per pixel; not a field sensor |
-| NASA MODIS via EOSDIS GIBS | True-colour and land-surface-temperature context | Cloud cover and coarse resolution can leave gaps |
-| NASA ECOSTRESS | Data contract and demo heat overlay | Current bundled farm scenes are explicitly labelled samples, not live readings |
+| [NASA SMAP via EOSDIS GIBS](https://gibs.earthdata.nasa.gov/) | Latest available regional surface-soil-moisture map | About 9 km per pixel; not a field sensor |
+| NASA MODIS via EOSDIS GIBS | Latest available true-colour and daytime land-surface-temperature context | Near-real-time rather than instantaneous; cloud cover and coarse resolution can leave gaps |
+
+Musim reads the current default date for every GIBS layer from NASA's live WMTS
+capability feed and displays that date in the interface. It does not describe
+satellite imagery as a real-time field sensor.
+
+## Product position
+
+Musim's selling point is not another farm record system or satellite dashboard.
+It is an **explainable rotation rehearsal**: NASA shows what is happening around
+the field, the farmer adds what a satellite cannot know, and the tool turns both
+into comparable three-season options. Every option exposes evidence, trade-offs,
+risks, missing information, and confidence, then produces questions for a local
+expert.
 
 The POWER route returns a clearly marked demonstration climatology if the live
 service cannot respond. Fallback data lowers recommendation confidence.

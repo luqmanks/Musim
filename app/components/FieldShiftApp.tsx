@@ -1,7 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import FieldMap, { type MapLayerKey } from "./FieldMap";
+import FieldMap, {
+  type ImageryStatus,
+  type MapLayerKey,
+  type SelectionMode,
+} from "./FieldMap";
 import {
   CROPS,
   DEFAULT_PRIORITIES,
@@ -14,6 +18,7 @@ import {
   type PriorityKey,
   type ScenarioKey,
 } from "../lib/field-shift";
+import { locationFromBoundary } from "../lib/geometry";
 
 type Step = "locate" | "details" | "priorities" | "results";
 type ResultTab = "conditions" | "rotations";
@@ -51,12 +56,21 @@ const SCENARIOS: Array<{ key: ScenarioKey; label: string; note: string }> = [
 ];
 
 const MAP_LAYERS: Array<{ key: MapLayerKey; label: string; note: string }> = [
-  { key: "base", label: "Field map", note: "OpenStreetMap context" },
-  { key: "true-color", label: "Satellite", note: "NASA MODIS true colour" },
+  { key: "base", label: "Map", note: "OpenStreetMap field context" },
+  { key: "ground-heat", label: "Surface heat", note: "NASA MODIS daytime land-surface temperature" },
   { key: "soil-moisture", label: "Soil moisture", note: "NASA SMAP regional surface soil moisture" },
-  { key: "ground-heat", label: "Ground heat", note: "NASA MODIS surface temperature" },
-  { key: "field-heat", label: "Field heat sample", note: "ECOSTRESS sample for demo farms" },
+  { key: "true-color", label: "Satellite", note: "NASA MODIS true-colour imagery" },
 ];
+
+function formatImageryDate(date?: string) {
+  if (!date) return "Date unavailable";
+  return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-MY", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
 
 function Icon({ name }: { name: "info" | "share" | "back" | "pin" | "check" | "close" }) {
   const paths = {
@@ -162,6 +176,8 @@ export default function FieldShiftApp() {
   const [step, setStep] = useState<Step>("locate");
   const [detailQuestion, setDetailQuestion] = useState(0);
   const [location, setLocation] = useState<FieldLocation | null>(null);
+  const [mapFocus, setMapFocus] = useState<FieldLocation | null>(null);
+  const [locating, setLocating] = useState(false);
   const [profile, setProfile] = useState<FarmProfile>(DEFAULT_PROFILE);
   const [priorities, setPriorities] = useState(DEFAULT_PRIORITIES);
   const [climate, setClimate] = useState<ClimateSummary | null>(null);
@@ -169,6 +185,12 @@ export default function FieldShiftApp() {
   const [resultTab, setResultTab] = useState<ResultTab>("conditions");
   const [scenario, setScenario] = useState<ScenarioKey>("typical");
   const [mapLayer, setMapLayer] = useState<MapLayerKey>("base");
+  const [selectionMode, setSelectionMode] = useState<SelectionMode>("boundary");
+  const [imageryStatus, setImageryStatus] = useState<ImageryStatus>({
+    dates: {},
+    retrievedAt: null,
+    isFallback: false,
+  });
   const [infoOpen, setInfoOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -180,7 +202,49 @@ export default function FieldShiftApp() {
 
   function selectDistrict(value: string) {
     const district = DISTRICTS.find((item) => item.name === value);
-    if (district) setLocation(district);
+    if (district) {
+      setSelectionMode("pin");
+      setMapFocus(null);
+      setLocation(district);
+    }
+  }
+
+  function focusDistrict(value: string) {
+    const district = DISTRICTS.find((item) => item.name === value);
+    if (district) setMapFocus(district);
+  }
+
+  function useDeviceLocation() {
+    if (!navigator.geolocation) {
+      setToast("Location access is not available in this browser.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setMapFocus({ name: "My location", lat: coords.latitude, lng: coords.longitude });
+        setLocating(false);
+        setToast("Map centred. Zoom in and tap the field corners.");
+        window.setTimeout(() => setToast(""), 2400);
+      },
+      () => {
+        setLocating(false);
+        setToast("Location permission was not available. Choose a nearby area instead.");
+        window.setTimeout(() => setToast(""), 3000);
+      },
+      { enableHighAccuracy: true, timeout: 10_000 },
+    );
+  }
+
+  function chooseSelectionMode(mode: SelectionMode) {
+    setSelectionMode(mode);
+    setLocation(null);
+    setMapFocus(null);
+  }
+
+  function undoBoundaryPoint() {
+    const points = location?.boundary?.slice(0, -1) ?? [];
+    setLocation(points.length ? locationFromBoundary(points) : null);
   }
 
   function goBack() {
@@ -218,13 +282,27 @@ export default function FieldShiftApp() {
   }
 
   const panelTitle = step === "locate" ? "Choose your field" : step === "details" ? "Farm details" : step === "priorities" ? "Choose your goals" : "Field comparison";
+  const boundaryPoints = location?.boundary?.length ?? 0;
+  const canContinue = Boolean(
+    location && (selectionMode === "pin" || boundaryPoints >= 3),
+  );
+  const activeLayer = MAP_LAYERS.find((layer) => layer.key === mapLayer) ?? MAP_LAYERS[0];
+  const activeImageryDate = mapLayer === "base" ? undefined : imageryStatus.dates[mapLayer];
 
   return (
     <main className={`app-shell step-${step}`}>
       <a className="skip-link" href="#workspace">Skip to field setup</a>
-      <FieldMap location={location} layerKey={mapLayer} onLocationChange={setLocation} />
-      {step === "locate" && !location && <div className="map-callout"><span>1</span><div><strong>Tap anywhere on the map</strong><small>Place a field pin, or choose a demo farm in the panel.</small></div></div>}
-      {location && step !== "results" && <div className="map-selection-badge"><Icon name="pin" /><div><small>Selected field</small><strong>{location.name}</strong></div></div>}
+      <FieldMap
+        location={location}
+        focusLocation={mapFocus}
+        layerKey={mapLayer}
+        selectionMode={selectionMode}
+        selectionEnabled={step === "locate"}
+        onLocationChange={setLocation}
+        onImageryStatusChange={setImageryStatus}
+      />
+      {step === "locate" && <div className="map-callout"><span>{selectionMode === "boundary" ? boundaryPoints + 1 : 1}</span><div><strong>{selectionMode === "boundary" ? "Zoom in, then draw your field" : "Tap your field location"}</strong><small>{selectionMode === "boundary" ? "Find your area, then tap each corner. Three or more points make a boundary." : "Place one pin, or choose a known farming area in the panel."}</small></div></div>}
+      {location && step !== "results" && <div className="map-selection-badge"><Icon name="pin" /><div><small>{location.boundary ? `${boundaryPoints} corners · ${location.areaHectares ?? 0} ha` : "Selected location"}</small><strong>{location.name}</strong></div></div>}
 
       <header className="topbar">
         <Brand />
@@ -238,32 +316,49 @@ export default function FieldShiftApp() {
       <section id="workspace" className={`workspace-panel ${step === "results" ? "results-panel" : ""}`} aria-labelledby="panel-title">
         {step !== "results" && <StepProgress step={step} />}
         {step !== "locate" && step !== "results" && <button className="back-button" type="button" onClick={goBack}><Icon name="back" /> Back</button>}
-        <div className="panel-intro">
+        {step !== "results" && <div className="panel-intro">
           <p>{step === "locate" ? "Start here" : step === "details" ? `Question ${detailQuestion + 1} of 4 · all optional` : step === "priorities" ? "These choices change the ranking" : location?.name}</p>
           <h1 id="panel-title">{panelTitle}</h1>
-        </div>
+        </div>}
 
         {step === "locate" && (
           <div className="locate-content">
-            <div className="instruction-card"><span>1</span><p><strong>Select one field.</strong> Tap the map, choose a Malaysian area, or use a ready-made demo.</p></div>
-            <label className="field-label" htmlFor="district-select">Choose a place</label>
-            <select id="district-select" name="district" autoComplete="off" className="select-control" value={location?.name ?? ""} onChange={(event) => selectDistrict(event.target.value)}>
-              <option value="">Choose a Malaysian farming area</option>
-              {DISTRICTS.map((district) => <option key={district.name}>{district.name}</option>)}
-            </select>
-            <div className="or-divider"><span>or try a demo</span></div>
-            <div className="demo-grid">
-              {DEMO_FARMS.map((farm) => (
-                <button type="button" key={farm.name} className={location?.farmId === farm.farmId ? "demo-farm selected" : "demo-farm"} onClick={() => setLocation(farm)}>
-                  <span className="demo-map-pattern" aria-hidden="true" />
-                  <strong>{farm.name.replace(" demo", "")}</strong>
-                  <small>{farm.name.startsWith("Kedah") ? "Paddy · MADA region" : "Paddy · Selangor"}</small>
-                </button>
-              ))}
+            <div className="selection-mode" aria-label="Field selection method">
+              <button type="button" aria-pressed={selectionMode === "boundary"} onClick={() => chooseSelectionMode("boundary")}><strong>Draw field area</strong><small>Best for field-level evidence</small></button>
+              <button type="button" aria-pressed={selectionMode === "pin"} onClick={() => chooseSelectionMode("pin")}><strong>Place one point</strong><small>Fast regional estimate</small></button>
             </div>
-            {location && <div className="selected-location"><Icon name="pin" /><div><strong>{location.name}</strong><span>{location.lat.toFixed(4)}, {location.lng.toFixed(4)}</span></div><span className="status-dot">Selected</span></div>}
-            <button className="primary-button" type="button" disabled={!location} onClick={() => setStep("details")}>Describe this farm</button>
-            <p className="map-hint">You can also tap anywhere on the map to place a field pin.</p>
+
+            {selectionMode === "boundary" ? <>
+              <div className="field-finder">
+                <label htmlFor="boundary-area-select">Find your area<select id="boundary-area-select" name="boundary-area" autoComplete="off" value={mapFocus?.name ?? ""} onChange={(event) => focusDistrict(event.target.value)}><option value="">Zoom near a farming area…</option>{DISTRICTS.map((district) => <option key={district.name}>{district.name}</option>)}</select></label>
+                <button type="button" onClick={useDeviceLocation} disabled={locating}>{locating ? "Finding…" : "Use my location"}</button>
+              </div>
+              <div className="instruction-card"><span>{Math.min(boundaryPoints + 1, 3)}</span><p><strong>Tap the corners of your field.</strong> We will close the shape after the third point. Add more points for a closer outline.</p></div>
+              <div className="boundary-status" aria-live="polite">
+                <div><span>Boundary</span><strong>{boundaryPoints < 3 ? `${boundaryPoints} of 3 minimum points` : `${boundaryPoints} corners mapped`}</strong></div>
+                <div><span>Estimated area</span><strong>{boundaryPoints >= 3 ? `${location?.areaHectares?.toLocaleString()} ha` : "—"}</strong></div>
+              </div>
+              <div className="boundary-actions"><button type="button" disabled={boundaryPoints === 0} onClick={undoBoundaryPoint}>Undo last point</button><button type="button" disabled={boundaryPoints === 0} onClick={() => setLocation(null)}>Clear boundary</button></div>
+            </> : <>
+              <div className="instruction-card"><span>1</span><p><strong>Place one point on the map</strong> or choose a known Malaysian farming area below.</p></div>
+              <label className="field-label" htmlFor="district-select">Choose a place</label>
+              <select id="district-select" name="district" autoComplete="off" className="select-control" value={location?.name ?? ""} onChange={(event) => selectDistrict(event.target.value)}>
+                <option value="">Choose a Malaysian farming area</option>
+                {DISTRICTS.map((district) => <option key={district.name}>{district.name}</option>)}
+              </select>
+              <div className="or-divider"><span>or try a demo</span></div>
+              <div className="demo-grid">
+                {DEMO_FARMS.map((farm) => (
+                  <button type="button" key={farm.name} className={location?.farmId === farm.farmId ? "demo-farm selected" : "demo-farm"} onClick={() => setLocation(farm)}>
+                    <span className="demo-map-pattern" aria-hidden="true" />
+                    <strong>{farm.name.replace(" demo", "")}</strong>
+                    <small>{farm.name.startsWith("Kedah") ? "Paddy · MADA region" : "Paddy · Selangor"}</small>
+                  </button>
+                ))}
+              </div>
+            </>}
+            {location && <div className="selected-location"><Icon name="pin" /><div><strong>{location.name}</strong><span>{location.boundary ? `${location.areaHectares ?? 0} ha · centre ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`}</span></div><span className="status-dot">Selected</span></div>}
+            <button className="primary-button" type="button" disabled={!canContinue} onClick={() => setStep("details")}>{selectionMode === "boundary" ? "Use this field area" : "Use this location"}</button>
           </div>
         )}
 
@@ -302,18 +397,20 @@ export default function FieldShiftApp() {
         {step === "results" && (
           <div className="results-content">
             <div className="result-header">
-              <div><span className="location-kicker"><Icon name="pin" /> {location?.name}</span><h1>Field outlook</h1></div>
+              <div><span className="location-kicker"><Icon name="pin" /> {location?.name}{location?.areaHectares ? ` · ${location.areaHectares} ha` : ""}</span><h1 id="panel-title">Your field brief</h1><p>Conditions, evidence and rotation trade-offs in one view.</p></div>
               <button className="edit-button" type="button" onClick={() => setStep("details")}>Edit my answers</button>
             </div>
             <div className="result-tabs" role="tablist" aria-label="Result views"><button role="tab" aria-selected={resultTab === "conditions"} onClick={() => setResultTab("conditions")}>Conditions</button><button role="tab" aria-selected={resultTab === "rotations"} onClick={() => setResultTab("rotations")}>Rotations</button></div>
             {loading && <div className="loading-state" role="status"><span className="loading-orbit" /><h2>Reading the field from space</h2><p>Building a five-year climate profile from NASA POWER…</p></div>}
             {!loading && climate && resultTab === "conditions" && <div className="conditions-view">
               {climate.isFallback && <div className="data-warning"><strong>Demonstration climate shown</strong><span>The live NASA request was unavailable. Scores are clearly marked as lower confidence.</span></div>}
-              <div className="metric-row"><div><span>Typical rainfall</span><strong>{Math.round(climate.annualRainMm).toLocaleString()} <small>mm/yr</small></strong></div><div><span>Average temperature</span><strong>{climate.meanTempC.toFixed(1)} <small>°C</small></strong></div><div><span>Wettest month</span><strong>{climate.wettestMonth}</strong></div><div><span>Drier months</span><strong>{climate.dryMonths}</strong></div></div>
-              <div className="insight-callout"><span aria-hidden="true">↳</span><p><strong>{climate.wettestMonth} carries the strongest heavy-rain pressure.</strong> Avoid leaving the field bare when erosion exposure is highest.</p></div>
+              <div className="conditions-summary">
+                <div className="metric-row"><div><span>Typical rainfall</span><strong>{Math.round(climate.annualRainMm).toLocaleString()} <small>mm/yr</small></strong></div><div><span>Average temperature</span><strong>{climate.meanTempC.toFixed(1)} <small>°C</small></strong></div><div><span>Wettest month</span><strong>{climate.wettestMonth}</strong></div><div><span>Drier months</span><strong>{climate.dryMonths}</strong></div></div>
+                <div className="insight-callout"><span aria-hidden="true">↳</span><p><strong>{climate.wettestMonth} carries the strongest heavy-rain pressure.</strong> Avoid leaving the field bare when erosion exposure is highest.</p></div>
+                <div className="provenance-card"><div><span>Source</span><strong>{climate.source}</strong></div><div><span>Period</span><strong>{climate.period}</strong></div><div><span>Spatial context</span><strong>{climate.resolution}</strong></div><a href={climate.sourceUrl} target="_blank" rel="noreferrer">Open NASA source</a></div>
+                <button className="primary-button" type="button" onClick={() => setResultTab("rotations")}>See rotation options</button>
+              </div>
               <ClimateTimeline climate={climate} />
-              <div className="provenance-card"><div><span>Source</span><strong>{climate.source}</strong></div><div><span>Period</span><strong>{climate.period}</strong></div><div><span>Spatial context</span><strong>{climate.resolution}</strong></div><a href={climate.sourceUrl} target="_blank" rel="noreferrer">Open NASA source</a></div>
-              <button className="primary-button" type="button" onClick={() => setResultTab("rotations")}>See rotation options</button>
             </div>}
             {!loading && climate && resultTab === "rotations" && <div className="rotations-view">
               <div className="scenario-control"><div><strong>Stress-test the plan</strong><span>{SCENARIOS.find((item) => item.key === scenario)?.note}</span></div><div>{SCENARIOS.map((item) => <button key={item.key} type="button" aria-pressed={scenario === item.key} onClick={() => setScenario(item.key)}>{item.label}</button>)}</div></div>
@@ -324,7 +421,15 @@ export default function FieldShiftApp() {
         )}
       </section>
 
-      {step === "results" && <div className="map-layer-control"><span>Map evidence</span>{MAP_LAYERS.map((layer) => <button key={layer.key} type="button" aria-pressed={mapLayer === layer.key} title={layer.note} onClick={() => setMapLayer(layer.key)}>{layer.label}</button>)}</div>}
+      {step === "results" && <aside className="map-evidence-dock" aria-label="NASA map evidence">
+        <div className="map-layer-control"><span>Map evidence</span>{MAP_LAYERS.map((layer) => <button key={layer.key} type="button" aria-pressed={mapLayer === layer.key} title={layer.note} onClick={() => setMapLayer(layer.key)}>{layer.label}</button>)}</div>
+        {mapLayer !== "base" && <div className="layer-readout" aria-live="polite">
+          <div><span className="nasa-pulse" /> <strong>{activeLayer.label}</strong><small>NASA EOSDIS GIBS · {formatImageryDate(activeImageryDate)}</small></div>
+          {mapLayer === "ground-heat" && <><div className="heat-ramp" role="img" aria-label="Surface heat colour scale from cooler to hotter"><span>Cooler</span><i /><span>Hotter</span></div><p>Near-real-time land-surface temperature. This is ground heat, not air temperature; clouds can leave gaps.</p></>}
+          {mapLayer === "soil-moisture" && <p>Latest available regional SMAP view. One pixel covers several kilometres, so use it as context—not a field sensor.</p>}
+          {imageryStatus.isFallback && <p className="layer-warning">The live date service is unavailable; a recent fallback date is shown.</p>}
+        </div>}
+      </aside>}
 
       {infoOpen && <div className="modal-backdrop" role="presentation" onMouseDown={() => setInfoOpen(false)}><section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="about-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" type="button" onClick={() => setInfoOpen(false)} aria-label="Close"><Icon name="close" /></button><span className="modal-mark">M</span><h2 id="about-title">A rehearsal, not a prescription</h2><p>Musim combines NASA Earth observations, farm details and your priorities to compare possible crop rotations.</p><p>It does not measure conditions directly on your field or replace local agronomic advice. Every result shows its evidence, assumptions and information gaps.</p><button className="primary-button" type="button" onClick={() => setInfoOpen(false)}>I understand</button></section></div>}
 

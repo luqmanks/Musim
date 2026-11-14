@@ -25,10 +25,10 @@ replaces—local agricultural expertise.
 ## What we developed
 
 - A responsive, map-first Next.js application
+- User-drawn field boundaries with an approximate hectare area
 - Live five-year NASA POWER climate aggregation for any selected coordinate
 - NASA SMAP, MODIS true-colour, and MODIS surface-temperature map layers through
-  EOSDIS GIBS
-- An ECOSTRESS field-heat data contract with clearly labelled demo scenes
+  EOSDIS GIBS, using NASA's live capability feed for the latest available dates
 - An explainable, farmer-priority-weighted rotation comparison engine
 - Climate sensitivity controls, uncertainty, evidence, and information gaps
 - A printable expert-handoff summary
@@ -48,9 +48,30 @@ not a generic satellite dashboard or a single-crop recommendation.
 2. **NASA SMAP through EOSDIS GIBS** — regional daily surface-soil-moisture
    context at approximately 9 km resolution.
 3. **NASA MODIS through EOSDIS GIBS** — true-colour imagery and daytime land
-   surface temperature.
-4. **NASA ECOSTRESS** — field-heat processing contract; current bundled scenes
-   remain visibly marked as samples until authenticated data processing is run.
+   surface temperature, with the latest available NASA date shown in the app.
+
+## User flow
+
+1. Draw the field boundary for the strongest field-level context, or place one
+   point for a quick regional estimate.
+2. Add optional farm knowledge: crop sequence, soil, water, equipment, and
+   market access. Unknown answers remain visible information gaps.
+3. Set priorities for water, soil health, income, erosion, nitrogen, and
+   practicality.
+4. Read the field brief: the five-year POWER profile plus switchable, dated
+   MODIS heat, SMAP soil moisture, and true-colour map evidence.
+5. Compare the current rotation with two alternatives and stress-test them
+   under drier, wetter, and hotter assumptions.
+6. Save an expert handoff containing the evidence, risks, and questions that
+   still require local review.
+
+## Selling point
+
+Musim is an explainable decision rehearsal, not a prescription and not a farm
+management clone. NASA contributes the environmental view; the farmer
+contributes the constraints NASA cannot see. Musim makes the trade-off between
+those inputs visible across the next three seasons, then turns uncertainty into
+an actionable checklist for a Malaysian agricultural officer.
 
 ## Limitations
 
@@ -76,8 +97,8 @@ farm recommendations.
 
 **0:00–0:04** — “Malaysia's next planting decision starts here—with the field.”
 
-**0:04–0:09** — Select the Kedah demo. “Musim reads five years of NASA climate
-data and regional soil moisture.”
+**0:04–0:09** — Draw a field boundary and switch on Surface heat. “Musim reads
+five years of NASA climate data and the latest available satellite heat.”
 
 **0:09–0:15** — Show farm questions and priorities. “The farmer adds what a
 satellite cannot know: soil, water, equipment, markets, and personal goals.”

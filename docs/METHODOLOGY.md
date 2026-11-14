@@ -24,9 +24,20 @@ Daily observations are aggregated into a typical month across the five-year
 period. Annual rainfall is the sum of those 12 typical months. The interface
 retains the source, date range, spatial resolution, and fallback status.
 
-NASA SMAP soil-moisture imagery is displayed through NASA EOSDIS GIBS. It is
-regional context at approximately 9 km resolution and is never described as a
-measurement taken inside the selected field.
+NASA SMAP soil-moisture imagery and MODIS daytime land-surface temperature are
+displayed through NASA EOSDIS GIBS. The server reads each layer's current
+default date from the live GIBS WMTS capability document. The interface shows
+that acquisition date and calls the imagery near-real-time, not instantaneous.
+
+SMAP is regional context at approximately 9 km resolution and is never
+described as a measurement taken inside the selected field. MODIS surface heat
+is land-surface temperature rather than air temperature; cloud cover may leave
+gaps.
+
+When a user draws a boundary, V1 calculates its centre and approximate area in
+hectares. POWER is still requested for the centre coordinate, while the full
+boundary remains visible over the imagery. Area-weighted environmental
+aggregation is a planned validation step, not a current claim.
 
 ## Rotation score
 
