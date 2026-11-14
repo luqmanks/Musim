@@ -23,7 +23,7 @@ import { CropCheckTab } from "./CropCheckTab";
 import { MonthlyClimateChart } from "./MonthlyClimateChart";
 import { PRIORITIES, SCENARIOS, type ResultTab } from "./config";
 import { Separator } from "@/components/ui/separator";
-import { ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 type ResultsStepProps = {
@@ -35,6 +35,7 @@ type ResultsStepProps = {
   scenario: ScenarioKey;
   results: RotationScore[];
   profile: FarmProfile;
+  onBack: () => void;
   onEdit: () => void;
   onShare: () => void;
   onTabChange: (tab: ResultTab) => void;
@@ -57,6 +58,7 @@ export function ResultsStep({
   scenario,
   results,
   profile,
+  onBack,
   onEdit,
   onShare,
   onTabChange,
@@ -77,6 +79,9 @@ export function ResultsStep({
         <div className="flex shrink-0 items-center gap-3 border-b px-4 py-3 lg:px-6">
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-5" />
+          <Button variant="ghost" size="sm" type="button" onClick={onBack}>
+            <ArrowLeft aria-hidden="true" /> Back
+          </Button>
           <h1 id="panel-title" className="text-base font-semibold">{resultTab === "rotations" ? "Rotation comparison" : resultTab === "conditions" ? "Field climate" : "Recent conditions"}</h1>
         </div>
         <Tabs value={resultTab} className="field-dashboard-body">

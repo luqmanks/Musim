@@ -245,6 +245,7 @@ export default function FieldShiftApp() {
             scenario={scenario}
             results={results}
             profile={profile}
+            onBack={goBack}
             onEdit={() => setStep("details")}
             onShare={() => setShareOpen(true)}
             onTabChange={setResultTab}
