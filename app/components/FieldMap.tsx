@@ -1,105 +1,191 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Map as MLMap, Marker as MLMarker } from "maplibre-gl";
+import type {
+  GeoJSONSource,
+  GeoJSONSourceSpecification,
+  Map as MLMap,
+  Marker as MLMarker,
+} from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { GIBS_LAYERS, gibsTileUrl, isoDaysBefore } from "../lib/gibs";
-import {
-  FIELD_HEAT,
-  FIELD_HEAT_KEY,
-  HEAT_RAMP,
-  type DemoFarm,
-  type EcostressScene,
-} from "../lib/ecostress";
+import type { FieldLocation } from "../lib/field-shift";
+import { locationFromBoundary, type FieldCoordinate } from "../lib/geometry";
 
-export type FieldLocation = { lng: number; lat: number };
+const SOURCE_ID = "field-shift-overlay";
+const LAYER_ID = "field-shift-overlay-layer";
+const BOUNDARY_FILL_SOURCE = "selected-field-fill-source";
+const BOUNDARY_LINE_SOURCE = "selected-field-line-source";
+const BOUNDARY_POINT_SOURCE = "selected-field-point-source";
+type GeoJsonData = Exclude<GeoJSONSourceSpecification["data"], string>;
 
-const SRC = "overlay";
-const LAYER = "overlay-layer";
-const DAYS_BACK = 60; // GIBS date scrubber range
-const DEFAULT_LAG = 3; // GIBS imagery usually lags a few days
+export type MapLayerKey =
+  | "base"
+  | "true-color"
+  | "soil-moisture"
+  | "ground-heat";
 
-const CHIPS = [
-  ...GIBS_LAYERS.map((l) => ({ key: l.key, label: l.label })),
-  { key: FIELD_HEAT.key, label: FIELD_HEAT.label },
-];
+export type SelectionMode = "pin" | "boundary";
+export type ImageryStatus = {
+  dates: Partial<Record<Exclude<MapLayerKey, "base">, string>>;
+  retrievedAt: string | null;
+  isFallback: boolean;
+};
+
+const EMPTY_GEOJSON: GeoJsonData = {
+  type: "FeatureCollection",
+  features: [],
+};
+
+function lineData(points: FieldCoordinate[]): GeoJsonData {
+  if (points.length < 2) return EMPTY_GEOJSON;
+  return {
+    type: "Feature",
+    properties: {},
+    geometry: {
+      type: "LineString",
+      coordinates: points.length >= 3 ? [...points, points[0]] : points,
+    },
+  };
+}
+
+function fillData(points: FieldCoordinate[]): GeoJsonData {
+  if (points.length < 3) return EMPTY_GEOJSON;
+  return {
+    type: "Feature",
+    properties: {},
+    geometry: { type: "Polygon", coordinates: [[...points, points[0]]] },
+  };
+}
+
+function pointData(points: FieldCoordinate[]): GeoJsonData {
+  return {
+    type: "FeatureCollection",
+    features: points.map((coordinates, index) => ({
+      type: "Feature",
+      properties: { index },
+      geometry: { type: "Point", coordinates },
+    })),
+  };
+}
+
+function addBoundaryLayers(map: MLMap) {
+  map.addSource(BOUNDARY_FILL_SOURCE, { type: "geojson", data: EMPTY_GEOJSON });
+  map.addSource(BOUNDARY_LINE_SOURCE, { type: "geojson", data: EMPTY_GEOJSON });
+  map.addSource(BOUNDARY_POINT_SOURCE, { type: "geojson", data: EMPTY_GEOJSON });
+  map.addLayer({
+    id: "selected-field-fill",
+    type: "fill",
+    source: BOUNDARY_FILL_SOURCE,
+    paint: { "fill-color": "#a8cf45", "fill-opacity": 0.24 },
+  });
+  map.addLayer({
+    id: "selected-field-line",
+    type: "line",
+    source: BOUNDARY_LINE_SOURCE,
+    paint: { "line-color": "#f7f5eb", "line-width": 4 },
+  });
+  map.addLayer({
+    id: "selected-field-line-accent",
+    type: "line",
+    source: BOUNDARY_LINE_SOURCE,
+    paint: { "line-color": "#507326", "line-width": 2 },
+  });
+  map.addLayer({
+    id: "selected-field-points",
+    type: "circle",
+    source: BOUNDARY_POINT_SOURCE,
+    paint: {
+      "circle-radius": 6,
+      "circle-color": "#a8cf45",
+      "circle-stroke-color": "#fffefa",
+      "circle-stroke-width": 3,
+    },
+  });
+}
 
 export default function FieldMap({
+  location,
+  focusLocation = null,
+  layerKey = "base",
+  selectionMode = "pin",
+  selectionEnabled = true,
   onLocationChange,
+  onImageryStatusChange,
 }: {
-  onLocationChange?: (p: FieldLocation) => void;
+  location: FieldLocation | null;
+  focusLocation?: FieldLocation | null;
+  layerKey?: MapLayerKey;
+  selectionMode?: SelectionMode;
+  selectionEnabled?: boolean;
+  onLocationChange: (location: FieldLocation) => void;
+  onImageryStatusChange?: (status: ImageryStatus) => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MLMap | null>(null);
   const markerRef = useRef<MLMarker | null>(null);
-  const onLocationRef = useRef(onLocationChange);
-  const placeMarkerRef = useRef<((lngLat: [number, number]) => void) | null>(null);
+  const callbackRef = useRef(onLocationChange);
+  const locationRef = useRef(location);
+  const selectionModeRef = useRef(selectionMode);
+  const selectionEnabledRef = useRef(selectionEnabled);
+  const imageryCallbackRef = useRef(onImageryStatusChange);
   const [ready, setReady] = useState(false);
-  const [layerKey, setLayerKey] = useState(GIBS_LAYERS[0].key);
-  // Read the clock after mount: Next "cacheComponents" forbids new Date() during prerender.
-  const [today, setToday] = useState<Date | null>(null);
-  const [step, setStep] = useState(DAYS_BACK - DEFAULT_LAG); // right = newest
-  const [farms, setFarms] = useState<DemoFarm[]>([]);
-  const [farmId, setFarmId] = useState<string | null>(null);
-  const [scenes, setScenes] = useState<Record<string, EcostressScene | "error">>({});
+  const [imageryStatus, setImageryStatus] = useState<ImageryStatus>({
+    dates: {},
+    retrievedAt: null,
+    isFallback: false,
+  });
 
   useEffect(() => {
-    onLocationRef.current = onLocationChange;
-  }, [onLocationChange]);
+    callbackRef.current = onLocationChange;
+    locationRef.current = location;
+    selectionModeRef.current = selectionMode;
+    selectionEnabledRef.current = selectionEnabled;
+    imageryCallbackRef.current = onImageryStatusChange;
+  }, [location, onImageryStatusChange, onLocationChange, selectionEnabled, selectionMode]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setToday(new Date());
+    const fallbackDate = isoDaysBefore(new Date(), 5);
+    fetch("/api/nasa/gibs")
+      .then((response) => {
+        if (!response.ok) throw new Error(String(response.status));
+        return response.json();
+      })
+      .then((data: ImageryStatus) => {
+        const status = { ...data, isFallback: false };
+        setImageryStatus(status);
+        imageryCallbackRef.current?.(status);
+      })
+      .catch(() => {
+        const status: ImageryStatus = {
+          dates: {
+            "true-color": fallbackDate,
+            "ground-heat": fallbackDate,
+            "soil-moisture": fallbackDate,
+          },
+          retrievedAt: null,
+          isFallback: true,
+        };
+        setImageryStatus(status);
+        imageryCallbackRef.current?.(status);
+      });
   }, []);
 
-  const isScene = layerKey === FIELD_HEAT_KEY;
-  const gibsLayer = GIBS_LAYERS.find((l) => l.key === layerKey);
-  const date = today ? isoDaysBefore(today, DAYS_BACK - step) : null;
-  const farm = farms.find((f) => f.id === farmId);
-  const sceneEntry = farmId ? scenes[farmId] : undefined;
-  const scene = sceneEntry && sceneEntry !== "error" ? sceneEntry : undefined;
-
-  // Demo farm list (static JSON in /public/data/farms).
-  useEffect(() => {
-    let off = false;
-    fetch("/data/farms/index.json")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((d: DemoFarm[]) => !off && setFarms(d))
-      .catch(() => {});
-    return () => {
-      off = true;
-    };
-  }, []);
-
-  // Load the selected farm's ECOSTRESS scene once.
-  useEffect(() => {
-    if (!isScene || !farm || scenes[farm.id]) return;
-    let off = false;
-    fetch(farm.scene)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((d: EcostressScene) => !off && setScenes((s) => ({ ...s, [farm.id]: d })))
-      .catch(() => !off && setScenes((s) => ({ ...s, [farm.id]: "error" })));
-    return () => {
-      off = true;
-    };
-  }, [isScene, farm, scenes]);
-
-  // Create the map once (maplibre-gl is imported lazily so SSR never touches it).
   useEffect(() => {
     let cancelled = false;
     let map: MLMap | undefined;
-
+    let resizeObserver: ResizeObserver | undefined;
     (async () => {
       const maplibregl = await import("maplibre-gl");
       if (cancelled || !container.current) return;
-
-      // Serve the worker from /public (see scripts/copy-maplibre-worker.mjs).
       maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
-
-      const m = new maplibregl.Map({
+      map = new maplibregl.Map({
         container: container.current,
-        center: [20, 10],
-        zoom: 1.8,
+        center: [101.2, 4.4],
+        zoom: 5.35,
+        minZoom: 4,
+        maxZoom: 16,
+        attributionControl: false,
         style: {
           version: 8,
           sources: {
@@ -111,227 +197,145 @@ export default function FieldMap({
               attribution: "© OpenStreetMap contributors",
             },
           },
-          layers: [{ id: "osm", type: "raster", source: "osm" }],
+          layers: [
+            {
+              id: "osm",
+              type: "raster",
+              source: "osm",
+              paint: {
+                "raster-saturation": -0.38,
+                "raster-contrast": 0.08,
+                "raster-brightness-max": 0.92,
+              },
+            },
+          ],
         },
       });
-      map = m;
-      mapRef.current = m;
-      m.addControl(new maplibregl.NavigationControl(), "top-right");
-      m.addControl(
-        new maplibregl.GeolocateControl({
-          positionOptions: { enableHighAccuracy: true },
-        }),
-        "top-right",
-      );
-      m.on("load", () => setReady(true));
-      placeMarkerRef.current = (lngLat) => {
-        if (!markerRef.current) {
-          markerRef.current = new maplibregl.Marker().setLngLat(lngLat).addTo(m);
-        } else {
-          markerRef.current.setLngLat(lngLat);
+      mapRef.current = map;
+      resizeObserver = new ResizeObserver(() => map?.resize());
+      resizeObserver.observe(container.current);
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+      map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
+      map.on("load", () => {
+        if (!map) return;
+        addBoundaryLayers(map);
+        map?.resize();
+        setReady(true);
+      });
+      map.on("click", (event) => {
+        if (!selectionEnabledRef.current) return;
+        if (selectionModeRef.current === "boundary") {
+          const current = locationRef.current?.boundary ?? [];
+          const point: FieldCoordinate = [
+            Number(event.lngLat.lng.toFixed(6)),
+            Number(event.lngLat.lat.toFixed(6)),
+          ];
+          callbackRef.current(locationFromBoundary([...current, point]));
+          return;
         }
-        onLocationRef.current?.({ lng: lngLat[0], lat: lngLat[1] });
-      };
-      m.on("click", (e) => placeMarkerRef.current?.([e.lngLat.lng, e.lngLat.lat]));
+        callbackRef.current({
+          lat: Number(event.lngLat.lat.toFixed(5)),
+          lng: Number(event.lngLat.lng.toFixed(5)),
+          name: "Pinned field",
+        });
+      });
     })();
-
     return () => {
       cancelled = true;
+      resizeObserver?.disconnect();
       markerRef.current?.remove();
-      markerRef.current = null;
-      placeMarkerRef.current = null;
       map?.remove();
       mapRef.current = null;
     };
   }, []);
 
-  // (Re)draw the overlay when the layer, date or farm scene changes (debounced for the scrubber).
+  useEffect(() => {
+    if (!ready || !mapRef.current) return;
+    const map = mapRef.current;
+    if (!location) {
+      markerRef.current?.remove();
+      markerRef.current = null;
+      (map.getSource(BOUNDARY_FILL_SOURCE) as GeoJSONSource).setData(EMPTY_GEOJSON);
+      (map.getSource(BOUNDARY_LINE_SOURCE) as GeoJSONSource).setData(EMPTY_GEOJSON);
+      (map.getSource(BOUNDARY_POINT_SOURCE) as GeoJSONSource).setData(EMPTY_GEOJSON);
+      return;
+    }
+    const boundary = location.boundary ?? [];
+    (map.getSource(BOUNDARY_FILL_SOURCE) as GeoJSONSource).setData(fillData(boundary));
+    (map.getSource(BOUNDARY_LINE_SOURCE) as GeoJSONSource).setData(lineData(boundary));
+    (map.getSource(BOUNDARY_POINT_SOURCE) as GeoJSONSource).setData(pointData(boundary));
+
+    if (boundary.length > 0) {
+      markerRef.current?.remove();
+      markerRef.current = null;
+      return;
+    }
+    (async () => {
+      const maplibregl = await import("maplibre-gl");
+      markerRef.current?.remove();
+      const element = document.createElement("div");
+      element.className = "field-marker";
+      element.setAttribute("aria-label", "Selected field");
+      markerRef.current = new maplibregl.Marker({ element })
+        .setLngLat([location.lng, location.lat])
+        .addTo(map);
+      map.flyTo({
+        center: [location.lng, location.lat],
+        zoom: location.farmId ? 12.2 : Math.max(map.getZoom(), 9),
+        duration: 950,
+      });
+    })();
+  }, [location, ready]);
+
+  useEffect(() => {
+    if (!ready || !focusLocation || !mapRef.current) return;
+    mapRef.current.flyTo({
+      center: [focusLocation.lng, focusLocation.lat],
+      zoom: 13.5,
+      duration: 1_100,
+    });
+  }, [focusLocation, ready]);
+
+  useEffect(() => {
+    if (!ready || !mapRef.current) return;
+    mapRef.current.getCanvas().style.cursor =
+      selectionEnabled && selectionMode === "boundary" ? "crosshair" : "";
+  }, [ready, selectionEnabled, selectionMode]);
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
-    const t = setTimeout(() => {
-      if (map.getLayer(LAYER)) map.removeLayer(LAYER);
-      if (map.getSource(SRC)) map.removeSource(SRC);
+    if (map.getLayer(LAYER_ID)) map.removeLayer(LAYER_ID);
+    if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
+    if (layerKey === "base") return;
 
-      if (isScene) {
-        if (!scene) return;
-        const [w, s, e, n] = scene.bounds;
-        map.addSource(SRC, {
-          type: "image",
-          url: scene.image,
-          coordinates: [
-            [w, n],
-            [e, n],
-            [e, s],
-            [w, s],
-          ],
-        });
-        map.addLayer({
-          id: LAYER,
-          type: "raster",
-          source: SRC,
-          // "nearest" keeps the real ~70 m pixels visible instead of blurring them.
-          paint: { "raster-opacity": 0.85, "raster-resampling": "nearest" },
-        });
-        return;
-      }
-
-      if (!gibsLayer || !date) return;
-      map.addSource(SRC, {
-        type: "raster",
-        tiles: [gibsTileUrl(gibsLayer, date)],
-        tileSize: 256,
-        maxzoom: gibsLayer.maxZoom,
-        attribution: "Imagery: NASA EOSDIS GIBS",
-      });
-      map.addLayer({
-        id: LAYER,
-        type: "raster",
-        source: SRC,
-        paint: { "raster-opacity": 0.9 },
-      });
-    }, 250);
-    return () => clearTimeout(t);
-  }, [isScene, scene, gibsLayer, date, ready]);
-
-  function pickFarm(f: DemoFarm) {
-    setFarmId(f.id);
-    mapRef.current?.flyTo({ center: f.center, zoom: f.zoom });
-    placeMarkerRef.current?.(f.center);
-  }
-
-  function pickLayer(key: string) {
-    setLayerKey(key);
-    if (key === FIELD_HEAT_KEY && !farmId && farms[0]) pickFarm(farms[0]);
-  }
-
-  const prettyDate = date
-    ? new Date(date + "T00:00:00Z").toLocaleDateString(undefined, {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        timeZone: "UTC",
-      })
-    : "…";
-
-  const note = isScene ? FIELD_HEAT.note : gibsLayer?.note;
+    const layer = GIBS_LAYERS.find((entry) => entry.key === layerKey);
+    const imageryDate = imageryStatus.dates[layerKey];
+    if (!layer || !imageryDate) return;
+    map.addSource(SOURCE_ID, {
+      type: "raster",
+      tiles: [gibsTileUrl(layer, imageryDate)],
+      tileSize: 256,
+      maxzoom: layer.maxZoom,
+      attribution: "Imagery: NASA EOSDIS GIBS",
+    });
+    map.addLayer({
+      id: LAYER_ID,
+      type: "raster",
+      source: SOURCE_ID,
+      paint: { "raster-opacity": 0.84 },
+    });
+  }, [imageryStatus.dates, layerKey, ready]);
 
   return (
-    <div className="relative h-full min-h-[420px] w-full">
-      {/* Inline style on purpose: maplibre-gl.css sets .maplibregl-map { position: relative },
-          which would override a Tailwind "absolute inset-0" class and collapse the map to 0px tall. */}
-      <div ref={container} style={{ position: "absolute", inset: 0 }} />
-
-      <div className="absolute left-3 top-3 flex max-h-[calc(100%-1.5rem)] w-72 max-w-[calc(100%-5rem)] flex-col gap-3 overflow-y-auto rounded-xl bg-white/95 p-3 text-sm text-zinc-900 shadow-lg dark:bg-zinc-900/95 dark:text-zinc-50">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Map layer">
-          {CHIPS.map((c) => (
-            <button
-              key={c.key}
-              type="button"
-              aria-pressed={c.key === layerKey}
-              onClick={() => pickLayer(c.key)}
-              className={`rounded-full border px-3 py-1 ${
-                c.key === layerKey
-                  ? "border-emerald-600 bg-emerald-100 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-50"
-                  : "border-zinc-300 dark:border-zinc-600"
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
-
-        <p className="text-zinc-600 dark:text-zinc-300">{note}</p>
-
-        {isScene ? (
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-wrap gap-2" role="group" aria-label="Demo farm">
-              {farms.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  aria-pressed={f.id === farmId}
-                  onClick={() => pickFarm(f)}
-                  className={`rounded-full border px-3 py-1 ${
-                    f.id === farmId
-                      ? "border-sky-600 bg-sky-100 text-sky-900 dark:bg-sky-900 dark:text-sky-50"
-                      : "border-zinc-300 dark:border-zinc-600"
-                  }`}
-                >
-                  {f.name}
-                </button>
-              ))}
-            </div>
-
-            {sceneEntry === "error" && (
-              <p role="alert">Couldn’t load heat data for this farm.</p>
-            )}
-
-            {scene && (
-              <>
-                {scene.isMock && (
-                  <p className="rounded-md bg-amber-100 px-2 py-1 text-amber-900 dark:bg-amber-900 dark:text-amber-50">
-                    Sample data for layout only. Not real satellite readings.
-                  </p>
-                )}
-                <div>
-                  <div
-                    className="h-3 rounded"
-                    style={{
-                      background: `linear-gradient(to right, ${HEAT_RAMP.join(",")})`,
-                    }}
-                    aria-hidden="true"
-                  />
-                  <div className="mt-1 flex justify-between text-zinc-600 dark:text-zinc-300">
-                    <span>Cooler {Math.round(scene.minC)} °C</span>
-                    <span>Hotter {Math.round(scene.maxC)} °C</span>
-                  </div>
-                </div>
-                <ul className="flex flex-col gap-1 text-zinc-700 dark:text-zinc-200">
-                  <li>
-                    Satellite pass:{" "}
-                    {new Date(scene.acquired).toLocaleString(undefined, {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}
-                  </li>
-                  <li>
-                    Clear sky over {Math.round(scene.clearFraction * 100)}% of
-                    this area. Cloudy patches are left blank.
-                  </li>
-                  {scene.hottest && (
-                    <li>Hottest spot: about {Math.round(scene.hottest.tempC)} °C</li>
-                  )}
-                </ul>
-                <p className="text-zinc-500 dark:text-zinc-400">
-                  Source: NASA ECOSTRESS ({scene.product}). The satellite passes
-                  at different times each day, so this is one moment, not an
-                  average.
-                </p>
-              </>
-            )}
-          </div>
-        ) : (
-          <label className="flex flex-col gap-1">
-            <span className="flex justify-between">
-              <span>Date</span>
-              <span className="font-medium">{prettyDate}</span>
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={DAYS_BACK - 2}
-              value={step}
-              onChange={(e) => setStep(Number(e.target.value))}
-              aria-label="Imagery date"
-            />
-          </label>
-        )}
-
-        <p className="text-zinc-500 dark:text-zinc-400">
-          Tap the map to see weather &amp; crop alerts for that spot.
-        </p>
-      </div>
+    <div className={`field-map selection-${selectionMode}`} aria-label="Interactive map of Malaysia">
+      <div
+        ref={container}
+        className="field-map-canvas"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+      />
+      {!ready && <div className="map-loading" role="status"><span /> Loading the map…</div>}
+      <div className="map-vignette" aria-hidden="true" />
     </div>
   );
 }

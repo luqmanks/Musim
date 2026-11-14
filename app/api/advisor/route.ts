@@ -1,9 +1,9 @@
-// POST /api/advisor  { lat, lng, cropId, question? }  ->  streamed plain text
+// POST /api/advisor  { lat, lng, cropId, question?, profile? }  ->  streamed plain text
 // Gemini on Vertex AI (express mode, API key in GEMINI_API_KEY) via the Vercel AI SDK.
 
 import { createGoogleVertex } from "@ai-sdk/google-vertex";
 import { streamText } from "ai";
-import { ADVISOR_SYSTEM, buildAdvisorPrompt } from "../../lib/advisor";
+import { ADVISOR_SYSTEM, buildAdvisorPrompt, farmContext } from "../../lib/advisor";
 import { CROPS, evaluate } from "../../lib/cropRules";
 import { fetchPowerDaily } from "../../lib/power";
 
@@ -17,7 +17,7 @@ const bad = (status: number, error: string) => Response.json({ error }, { status
 export async function POST(req: Request) {
   if (!process.env.GEMINI_API_KEY) return bad(500, "GEMINI_API_KEY is not set on the server.");
 
-  let body: { lat?: unknown; lng?: unknown; cropId?: unknown; question?: unknown };
+  let body: { lat?: unknown; lng?: unknown; cropId?: unknown; question?: unknown; profile?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -49,6 +49,7 @@ export async function POST(req: Request) {
       alerts: evaluate(crop, data),
       today: now.toISOString().slice(0, 10),
       question: question || undefined,
+      farm: farmContext(body.profile),
     }),
     maxOutputTokens: 4000, // Gemini 3 counts thinking tokens here
     abortSignal: req.signal,

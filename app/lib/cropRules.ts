@@ -32,7 +32,7 @@ export const CROPS: CropProfile[] = [
     disease: null, lowSun: 13, windMax: null,
   },
   {
-    id: "padi", name: "Padi", note: "Most sensitive at flowering and grain fill.",
+    id: "padi", name: "Paddy (padi)", note: "Most sensitive at flowering and grain fill.",
     dryDays: 5, rain30Min: 150, rootDry: 0.5, rootWet: null, heavyRain: 80, heatMax: 35,
     disease: "rice blast and sheath blight", lowSun: 14, windMax: 5,
   },

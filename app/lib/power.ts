@@ -80,21 +80,24 @@ export function parsePower(raw: RawResponse, lng: number, lat: number): PowerDat
 }
 
 const cache = new Map<string, PowerData>();
+const CACHE_MAX = 64;
 
-/** Fetch the last `days` days ending today (the newest days come back as null). */
-export async function fetchPowerDaily(
+/**
+ * Fetch any date range (ISO dates, inclusive). Used by the 90-day crop check and by the
+ * five-year climate profile behind /api/nasa/power. `init` is passed to fetch, e.g.
+ * `{ next: { revalidate: 86_400 } }` on the server.
+ */
+export async function fetchPowerRange(
   lng: number,
   lat: number,
-  days: number,
-  today: Date,
-  signal?: AbortSignal,
+  startIso: string,
+  endIso: string,
+  opts: { signal?: AbortSignal; init?: RequestInit } = {},
 ): Promise<PowerData> {
-  const end = isoDaysBefore(today, 0);
-  const start = isoDaysBefore(today, days - 1);
-  const url = powerUrl(lng, lat, start, end);
+  const url = powerUrl(lng, lat, startIso, endIso);
   const hit = cache.get(url);
   if (hit) return hit;
-  const res = await fetch(url, { signal });
+  const res = await fetch(url, { ...opts.init, signal: opts.signal });
   if (!res.ok) {
     let msg = `NASA POWER returned ${res.status}`;
     try {
@@ -104,8 +107,21 @@ export async function fetchPowerDaily(
     throw new Error(msg);
   }
   const data = parsePower(await res.json(), round2(lng), round2(lat));
+  if (!data.dates.length) throw new Error("NASA POWER response did not include parameters");
+  if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value!);
   cache.set(url, data);
   return data;
+}
+
+/** Fetch the last `days` days ending today (the newest days come back as null). */
+export function fetchPowerDaily(
+  lng: number,
+  lat: number,
+  days: number,
+  today: Date,
+  signal?: AbortSignal,
+): Promise<PowerData> {
+  return fetchPowerRange(lng, lat, isoDaysBefore(today, days - 1), isoDaysBefore(today, 0), { signal });
 }
 
 /** Values from the last `n` days that have data (skips the trailing null lag). */

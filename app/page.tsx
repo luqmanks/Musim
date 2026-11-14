@@ -1,9 +1,5 @@
-import Dashboard from "./components/Dashboard";
+import FieldShiftApp from "./components/FieldShiftApp";
 
 export default function Home() {
-  return (
-    <main className="flex h-dvh w-full flex-col">
-      <Dashboard />
-    </main>
-  );
+  return <FieldShiftApp />;
 }

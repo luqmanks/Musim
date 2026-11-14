@@ -105,16 +105,16 @@ export default function DailyChart(p: DailyChartProps) {
   const tipLeft = hover !== null ? Math.min(Math.max(x(hover) - 70, 0), w - 140) : 0;
 
   return (
-    <figure className="flex flex-col gap-1">
-      <figcaption className="flex items-baseline justify-between gap-2">
-        <span className="font-medium text-zinc-900 dark:text-zinc-50">{p.title}</span>
-        {p.subtitle && <span className="text-xs text-zinc-500 dark:text-zinc-400">{p.subtitle}</span>}
+    <figure className="fs-chart">
+      <figcaption>
+        <strong>{p.title}</strong>
+        {p.subtitle && <span>{p.subtitle}</span>}
       </figcaption>
-      <div ref={wrap} className="relative w-full">
+      <div ref={wrap} className="fs-chart-plot">
         {!hasData ? (
-          <p className="py-8 text-center text-zinc-500">No data for this period.</p>
+          <p className="fs-chart-empty">No data for this period.</p>
         ) : (
-          <svg width={w} height={H} role="img" aria-label={`${p.title} chart`} className="block overflow-visible">
+          <svg width={w} height={H} role="img" aria-label={`${p.title} chart`} className="fs-chart-svg">
             {ticks.map((t) => (
               <g key={t}>
                 <line x1={PAD.l} x2={w - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--viz-grid)" strokeWidth={1} />
@@ -159,7 +159,7 @@ export default function DailyChart(p: DailyChartProps) {
               <>
                 <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={PAD.t + ih} stroke="var(--viz-axis)" strokeWidth={1} />
                 {p.line?.[hover] != null && (
-                  <circle cx={x(hover)} cy={y(p.line[hover]!)} r={4} fill={p.color} stroke="var(--background)" strokeWidth={2} />
+                  <circle cx={x(hover)} cy={y(p.line[hover]!)} r={4} fill={p.color} stroke="var(--white)" strokeWidth={2} />
                 )}
               </>
             )}
@@ -169,13 +169,13 @@ export default function DailyChart(p: DailyChartProps) {
           </svg>
         )}
         {tip && hover !== null && (
-          <div className="pointer-events-none absolute top-0 z-10 w-[140px] rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs shadow dark:border-zinc-700 dark:bg-zinc-800"
+          <div className="fs-chart-tip"
             style={{ left: tipLeft }}>
-            <div className="font-medium">{short(p.dates[hover])}</div>
+            <strong>{short(p.dates[hover])}</strong>
             {tip.map((r) => (
-              <div key={r.label} className="flex justify-between gap-2 text-zinc-600 dark:text-zinc-300">
+              <div key={r.label}>
                 <span>{r.label}</span>
-                <span className="tabular-nums text-zinc-900 dark:text-zinc-50">{r.value}</span>
+                <b>{r.value}</b>
               </div>
             ))}
           </div>
