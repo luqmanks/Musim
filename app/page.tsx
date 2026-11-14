@@ -1,9 +1,9 @@
-import FieldMap from "./components/FieldMap";
+import Dashboard from "./components/Dashboard";
 
 export default function Home() {
   return (
     <main className="flex h-dvh w-full flex-col">
-      <FieldMap />
+      <Dashboard />
     </main>
   );
 }

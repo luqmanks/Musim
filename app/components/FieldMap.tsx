@@ -33,6 +33,7 @@ export default function FieldMap({
   const mapRef = useRef<MLMap | null>(null);
   const markerRef = useRef<MLMarker | null>(null);
   const onLocationRef = useRef(onLocationChange);
+  const placeMarkerRef = useRef<((lngLat: [number, number]) => void) | null>(null);
   const [ready, setReady] = useState(false);
   const [layerKey, setLayerKey] = useState(GIBS_LAYERS[0].key);
   // Read the clock after mount: Next "cacheComponents" forbids new Date() during prerender.
@@ -123,22 +124,22 @@ export default function FieldMap({
         "top-right",
       );
       m.on("load", () => setReady(true));
-      m.on("click", (e) => {
+      placeMarkerRef.current = (lngLat) => {
         if (!markerRef.current) {
-          markerRef.current = new maplibregl.Marker()
-            .setLngLat(e.lngLat)
-            .addTo(m);
+          markerRef.current = new maplibregl.Marker().setLngLat(lngLat).addTo(m);
         } else {
-          markerRef.current.setLngLat(e.lngLat);
+          markerRef.current.setLngLat(lngLat);
         }
-        onLocationRef.current?.({ lng: e.lngLat.lng, lat: e.lngLat.lat });
-      });
+        onLocationRef.current?.({ lng: lngLat[0], lat: lngLat[1] });
+      };
+      m.on("click", (e) => placeMarkerRef.current?.([e.lngLat.lng, e.lngLat.lat]));
     })();
 
     return () => {
       cancelled = true;
       markerRef.current?.remove();
       markerRef.current = null;
+      placeMarkerRef.current = null;
       map?.remove();
       mapRef.current = null;
     };
@@ -196,6 +197,7 @@ export default function FieldMap({
   function pickFarm(f: DemoFarm) {
     setFarmId(f.id);
     mapRef.current?.flyTo({ center: f.center, zoom: f.zoom });
+    placeMarkerRef.current?.(f.center);
   }
 
   function pickLayer(key: string) {
@@ -327,7 +329,7 @@ export default function FieldMap({
         )}
 
         <p className="text-zinc-500 dark:text-zinc-400">
-          Tap the map to mark your field.
+          Tap the map to see weather &amp; crop alerts for that spot.
         </p>
       </div>
     </div>

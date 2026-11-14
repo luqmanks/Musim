@@ -25,3 +25,25 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* Chart tokens (dataviz reference palette: blue / orange / aqua slots + status). */
+:root {
+  --viz-grid: #e4e3df;
+  --viz-axis: #52514e;
+  --viz-rain: #2a78d6;
+  --viz-temp: #eb6834;
+  --viz-soil: #1baf7a;
+  --viz-ref: #8a8984;
+  --status-warning: #fab219;
+  --status-critical: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --viz-grid: #33332f;
+    --viz-axis: #c3c2b7;
+    --viz-rain: #3987e5;
+    --viz-temp: #d95926;
+    --viz-soil: #199e70;
+    --viz-ref: #8f8e88;
+  }
+}

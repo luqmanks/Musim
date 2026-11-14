@@ -1,5 +1,40 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Field weather & crop alerts (NASA POWER)
+
+Tap a spot on the map (or pick a demo farm under "Field heat") and the right-hand panel
+(below the map on phones) loads the last 90 days from the NASA POWER **daily single-point API**:
+
+```
+GET https://power.larc.nasa.gov/api/temporal/daily/point
+    ?parameters=T2M,T2M_MAX,T2M_MIN,PRECTOTCORR,RH2M,WS2M,ALLSKY_SFC_SW_DWN,GWETROOT,GWETTOP
+    &community=AG&longitude=<lng>&latitude=<lat>&start=YYYYMMDD&end=YYYYMMDD&format=JSON
+```
+
+- The browser calls it directly (CORS is open, no API key). Code: `app/lib/power.ts`.
+- `-999` is the fill value. The newest 2–4 days are usually still `-999` (solar radiation lags longest),
+  so every KPI and alert shows the date its data runs to.
+- The grid is about 0.5° (~50 km), so the values describe the surrounding area, not a single field.
+- Crop alerts (`app/lib/cropRules.ts`) are rule-of-thumb checks for dry spells, 30-day rain, root-zone
+  drought and waterlogging, heavy rain, heat, disease weather, low sunlight, wind and rubber tapping days.
+  Thresholds are set per crop (oil palm, padi, durian/fruit, rubber, cocoa, banana, leafy vegetables,
+  generic). They look back at past weather. POWER has no forecast, and the alerts are not agronomic advice.
+
+### AI field advisor (Gemini on Vertex AI)
+
+The "Analyse this field" button calls `POST /api/advisor` (`app/api/advisor/route.ts`). The server
+re-fetches the NASA POWER data, re-runs the crop rules, and streams a Gemini analysis through the
+Vercel AI SDK (`ai` + `@ai-sdk/google-vertex`, express mode with an API key). The browser only sends
+`{ lat, lng, cropId, question? }`, so the key and the prompt (`app/lib/advisor.ts`) stay on the server.
+
+`.env` (git-ignored):
+
+```
+GEMINI_API_KEY=<Vertex AI express-mode API key>
+# optional, default gemini-3.8-flash
+GEMINI_MODEL=gemini-3.8-flash
+```
+
 ## Getting Started
 
 First, run the development server:
