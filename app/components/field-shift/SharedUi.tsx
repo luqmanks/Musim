@@ -5,6 +5,7 @@ import {
   Info,
   MapPin,
   Share2,
+  Sprout,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -27,9 +28,9 @@ export function Icon({ name }: { name: IconName }) {
 export function Brand() {
   return (
     <div className="brand" aria-label="Musim Field Shift Malaysia">
-      <span className="brand-orbit" aria-hidden="true"><span /></span>
+      <Sprout className="icon" aria-hidden="true" />
       <div>
-        <strong>MUSIM</strong>
+        <strong>Musim</strong>
         <small>Field Shift Malaysia</small>
       </div>
     </div>

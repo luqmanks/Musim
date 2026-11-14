@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CornerDownRight } from "lucide-react";
 import type { ClimateSummary, PriorityKey, RotationScore, ScenarioKey } from "../../lib/field-shift";
@@ -62,11 +64,11 @@ export function ResultsStep({
               <div><span>Wettest month</span><strong>{climate.wettestMonth}</strong></div>
               <div><span>Drier months</span><strong>{climate.dryMonths}</strong></div>
             </div>
-            <div className="insight-callout"><CornerDownRight className="icon" aria-hidden="true" /><p><strong>What this means: {climate.wettestMonth} has the strongest heavy-rain pressure.</strong> Keep living cover on the soil where possible and confirm drainage in the field.</p></div>
-            <div className="provenance-card">
+            <Card className="insight-callout"><CornerDownRight className="icon" aria-hidden="true" /><p><strong>What this means: {climate.wettestMonth} has the strongest heavy-rain pressure.</strong> Keep living cover on the soil where possible and confirm drainage in the field.</p></Card>
+            <Card className="provenance-card">
               <div><span>Source</span><strong>{climate.source}</strong></div><div><span>Period</span><strong>{climate.period}</strong></div><div><span>Spatial context</span><strong>{climate.resolution}</strong></div>
               <a href={climate.sourceUrl} target="_blank" rel="noreferrer">Open NASA source</a>
-            </div>
+            </Card>
             <Button className="step-primary" size="lg" type="button" onClick={() => onTabChange("rotations")}>See rotation options</Button>
           </div>
           <ClimateTimeline climate={climate} />
@@ -92,10 +94,10 @@ function ClimateTimeline({ climate }: { climate: ClimateSummary }) {
   const maxRain = Math.max(...climate.monthly.map((month) => month.rainMm), 1);
 
   return (
-    <div className="timeline-card">
+    <Card className="timeline-card">
       <div className="section-heading compact">
         <div><h3>Season rhythm</h3><p>Typical monthly rainfall and heat across {climate.period}.</p></div>
-        <span className="source-chip">NASA POWER</span>
+        <Badge variant="secondary" className="source-chip">NASA POWER</Badge>
       </div>
       <div className="climate-timeline" role="img" aria-label="Monthly rainfall and temperature timeline">
         {climate.monthly.map((month) => (
@@ -107,7 +109,7 @@ function ClimateTimeline({ climate }: { climate: ClimateSummary }) {
         ))}
       </div>
       <div className="timeline-legend"><span><i className="legend-rain" /> rainfall</span><span><i className="legend-heat" /> maximum temperature</span></div>
-    </div>
+    </Card>
   );
 }
 
@@ -115,17 +117,19 @@ function RotationCard({ result, featured }: { result: RotationScore; featured?: 
   const keyScores: PriorityKey[] = ["water", "soil", "income", "erosion"];
 
   return (
-    <article className={`rotation-card ${featured ? "featured" : ""}`} aria-labelledby={`rotation-${result.id}-title`}>
-      <header>
-        <div><span className="rotation-label">{result.label}</span><h3 id={`rotation-${result.id}-title`}>{result.descriptor}</h3></div>
+    <Card className={`rotation-card ${featured ? "featured" : ""}`} aria-labelledby={`rotation-${result.id}-title`}>
+      <CardHeader>
+        <div><Badge variant={featured ? "default" : "secondary"} className="rotation-label">{result.label}</Badge><h3 id={`rotation-${result.id}-title`}>{result.descriptor}</h3></div>
         <div className="overall-score"><span>Fit score</span><div><strong>{result.total}</strong><small>/100</small></div></div>
-      </header>
-      <div className="crop-sequence">
-        {result.crops.map((crop, index) => <div key={`${crop}-${index}`}><span>{index + 1}</span><strong>{cropLabel(crop)}</strong>{index < result.crops.length - 1 && <i aria-hidden="true" />}</div>)}
-      </div>
-      <div className="score-grid">
-        {keyScores.map((key) => <div key={key}><span>{PRIORITIES.find((item) => item.key === key)?.label}</span><strong>{result.scores[key]}</strong><div role="meter" aria-label={`${PRIORITIES.find((item) => item.key === key)?.label} score`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={result.scores[key]}><i style={{ width: `${result.scores[key]}%` }} /></div></div>)}
-      </div>
+      </CardHeader>
+      <CardContent className="rotation-card-content">
+        <div className="crop-sequence">
+          {result.crops.map((crop, index) => <div key={`${crop}-${index}`}><span>{index + 1}</span><strong>{cropLabel(crop)}</strong>{index < result.crops.length - 1 && <i aria-hidden="true" />}</div>)}
+        </div>
+        <div className="score-grid">
+          {keyScores.map((key) => <div key={key}><span>{PRIORITIES.find((item) => item.key === key)?.label}</span><strong>{result.scores[key]}</strong><div role="meter" aria-label={`${PRIORITIES.find((item) => item.key === key)?.label} score`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={result.scores[key]}><i style={{ width: `${result.scores[key]}%` }} /></div></div>)}
+        </div>
+      </CardContent>
       <details className="evidence-details" open={featured}>
         <summary><span>Evidence and local checks</span><small>{result.evidence.length + result.risks.length} items</small></summary>
         <div className="evidence-body">
@@ -134,7 +138,7 @@ function RotationCard({ result, featured }: { result: RotationScore; featured?: 
           <h4>Check locally</h4><ul>{result.risks.map((risk) => <li key={risk}>{risk}</li>)}</ul>
         </div>
       </details>
-      <footer><span className={`confidence ${result.confidence.toLowerCase()}`}><i aria-hidden="true" />{result.confidence} confidence</span><span className="gap-count">{result.gaps.length} information gap{result.gaps.length === 1 ? "" : "s"}</span></footer>
-    </article>
+      <CardFooter><Badge variant="secondary" className={`confidence ${result.confidence.toLowerCase()}`}>{result.confidence} confidence</Badge><span className="gap-count">{result.gaps.length} information gap{result.gaps.length === 1 ? "" : "s"}</span></CardFooter>
+    </Card>
   );
 }

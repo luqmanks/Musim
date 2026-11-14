@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { FieldLocation } from "../../lib/field-shift";
@@ -65,10 +66,10 @@ export function LocateStep({
             <Button type="button" variant="outline" size="lg" onClick={onUseDeviceLocation} disabled={locating}>{locating ? "Finding…" : "Use location"}</Button>
           </div>
           <p className="step-note"><strong>Tap each field corner.</strong> The boundary closes after three points.</p>
-          <div className="boundary-status" aria-live="polite">
+          <Card className="boundary-status" aria-live="polite">
             <div><span>Boundary</span><strong>{boundaryPoints < 3 ? `${boundaryPoints} of 3 minimum points` : `${boundaryPoints} corners mapped`}</strong></div>
             <div><span>Estimated area</span><strong>{boundaryPoints >= 3 ? `${location?.areaHectares?.toLocaleString()} ha` : "—"}</strong></div>
-          </div>
+          </Card>
           <div className="boundary-actions">
             <Button type="button" variant="ghost" disabled={boundaryPoints === 0} onClick={onUndoBoundaryPoint}>Undo</Button>
             <Button type="button" variant="ghost" disabled={boundaryPoints === 0} onClick={onClearBoundary}>Clear</Button>
@@ -87,7 +88,6 @@ export function LocateStep({
           <div className="demo-grid">
             {DEMO_FARMS.map((farm) => (
               <Button type="button" variant="outline" key={farm.name} className={location?.farmId === farm.farmId ? "demo-farm selected" : "demo-farm"} onClick={() => onSelectDemo(farm)}>
-                <span className="demo-map-pattern" aria-hidden="true" />
                 <strong>{farm.name.replace(" demo", "")}</strong>
                 <small>{farm.name.startsWith("Kedah") ? "Paddy · MADA region" : "Paddy · Selangor"}</small>
               </Button>
@@ -97,13 +97,13 @@ export function LocateStep({
       )}
 
       {location && (
-        <div className="selected-location">
+        <Card className="selected-location">
           <Icon name="pin" />
           <div>
             <strong>{location.name}</strong>
             <span>{location.boundary ? `${(location.areaHectares ?? 0).toLocaleString()} ha · centre ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`}</span>
           </div>
-        </div>
+        </Card>
       )}
       <div className="step-footer">
         <Button className="step-primary" size="lg" type="button" disabled={!canContinue} onClick={onContinue}>
