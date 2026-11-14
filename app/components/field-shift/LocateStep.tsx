@@ -1,3 +1,7 @@
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { FieldLocation } from "../../lib/field-shift";
 import type { SelectionMode } from "../FieldMap";
 import { DEMO_FARMS, DISTRICTS } from "./config";
@@ -38,75 +42,73 @@ export function LocateStep({
 }: LocateStepProps) {
   return (
     <div className="locate-content">
-      <div className="selection-mode" aria-label="Field selection method">
-        <button type="button" aria-pressed={selectionMode === "boundary"} onClick={() => onChooseSelectionMode("boundary")}>
-          <strong>Draw my field</strong><small>Closer context for this field</small>
-        </button>
-        <button type="button" aria-pressed={selectionMode === "pin"} onClick={() => onChooseSelectionMode("pin")}>
-          <strong>Place one point</strong><small>Quick regional estimate</small>
-        </button>
-      </div>
+      <Tabs value={selectionMode} onValueChange={(value) => onChooseSelectionMode(value as SelectionMode)}>
+        <TabsList className="selection-mode" aria-label="Field selection method">
+          <TabsTrigger value="boundary" className="selection-mode-trigger">
+            <span><strong>Draw field</strong><small>Most accurate</small></span>
+          </TabsTrigger>
+          <TabsTrigger value="pin" className="selection-mode-trigger">
+            <span><strong>Place point</strong><small>Quick estimate</small></span>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {selectionMode === "boundary" ? (
         <>
           <div className="field-finder">
-            <label htmlFor="boundary-area-select">
+            <label>
               Find your area
-              <select id="boundary-area-select" name="boundary-area" autoComplete="off" value={mapFocus?.name ?? ""} onChange={(event) => onFocusDistrict(event.target.value)}>
-                <option value="">Zoom near a farming area…</option>
-                {DISTRICTS.map((district) => <option key={district.name}>{district.name}</option>)}
-              </select>
+              <Select value={mapFocus?.name ?? ""} onValueChange={onFocusDistrict}>
+                <SelectTrigger id="boundary-area-select" className="shadcn-select"><SelectValue placeholder="Choose a farming area" /></SelectTrigger>
+                <SelectContent>{DISTRICTS.map((district) => <SelectItem key={district.name} value={district.name}>{district.name}</SelectItem>)}</SelectContent>
+              </Select>
             </label>
-            <button type="button" onClick={onUseDeviceLocation} disabled={locating}>{locating ? "Finding…" : "Use my location"}</button>
+            <Button type="button" variant="outline" size="lg" onClick={onUseDeviceLocation} disabled={locating}>{locating ? "Finding…" : "Use location"}</Button>
           </div>
-          <div className="instruction-card">
-            <span>{Math.min(boundaryPoints + 1, 3)}</span>
-            <p><strong>Tap each corner of your field.</strong> After three points, the map closes the shape. Add more points for a closer outline.</p>
-          </div>
-          <div className="boundary-status" aria-live="polite">
+          <p className="step-note"><strong>Tap each field corner.</strong> The boundary closes after three points.</p>
+          <Card className="boundary-status" aria-live="polite">
             <div><span>Boundary</span><strong>{boundaryPoints < 3 ? `${boundaryPoints} of 3 minimum points` : `${boundaryPoints} corners mapped`}</strong></div>
             <div><span>Estimated area</span><strong>{boundaryPoints >= 3 ? `${location?.areaHectares?.toLocaleString()} ha` : "—"}</strong></div>
-          </div>
+          </Card>
           <div className="boundary-actions">
-            <button type="button" disabled={boundaryPoints === 0} onClick={onUndoBoundaryPoint}>Undo last point</button>
-            <button type="button" disabled={boundaryPoints === 0} onClick={onClearBoundary}>Clear boundary</button>
+            <Button type="button" variant="ghost" disabled={boundaryPoints === 0} onClick={onUndoBoundaryPoint}>Undo</Button>
+            <Button type="button" variant="ghost" disabled={boundaryPoints === 0} onClick={onClearBoundary}>Clear</Button>
           </div>
         </>
       ) : (
         <>
-          <div className="instruction-card"><span>1</span><p><strong>Tap your field on the map</strong> or choose a nearby Malaysian farming area below.</p></div>
-          <label className="field-label" htmlFor="district-select">Choose a place</label>
-          <select id="district-select" name="district" autoComplete="off" className="select-control" value={location?.name ?? ""} onChange={(event) => onSelectDistrict(event.target.value)}>
-            <option value="">Choose a Malaysian farming area</option>
-            {DISTRICTS.map((district) => <option key={district.name}>{district.name}</option>)}
-          </select>
+          <p className="step-note"><strong>Tap the map</strong> or choose a nearby farming area.</p>
+          <label className="field-label">Choose a place
+            <Select value={location?.name ?? ""} onValueChange={onSelectDistrict}>
+              <SelectTrigger id="district-select" className="shadcn-select"><SelectValue placeholder="Choose a Malaysian farming area" /></SelectTrigger>
+              <SelectContent>{DISTRICTS.map((district) => <SelectItem key={district.name} value={district.name}>{district.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </label>
           <div className="or-divider"><span>or try a demo</span></div>
           <div className="demo-grid">
             {DEMO_FARMS.map((farm) => (
-              <button type="button" key={farm.name} className={location?.farmId === farm.farmId ? "demo-farm selected" : "demo-farm"} onClick={() => onSelectDemo(farm)}>
-                <span className="demo-map-pattern" aria-hidden="true" />
+              <Button type="button" variant="outline" key={farm.name} className={location?.farmId === farm.farmId ? "demo-farm selected" : "demo-farm"} onClick={() => onSelectDemo(farm)}>
                 <strong>{farm.name.replace(" demo", "")}</strong>
                 <small>{farm.name.startsWith("Kedah") ? "Paddy · MADA region" : "Paddy · Selangor"}</small>
-              </button>
+              </Button>
             ))}
           </div>
         </>
       )}
 
       {location && (
-        <div className="selected-location">
+        <Card className="selected-location">
           <Icon name="pin" />
           <div>
             <strong>{location.name}</strong>
             <span>{location.boundary ? `${(location.areaHectares ?? 0).toLocaleString()} ha · centre ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`}</span>
           </div>
-          <span className="status-dot">Selected</span>
-        </div>
+        </Card>
       )}
       <div className="step-footer">
-        <button className="primary-button" type="button" disabled={!canContinue} onClick={onContinue}>
+        <Button className="step-primary" size="lg" type="button" disabled={!canContinue} onClick={onContinue}>
           {selectionMode === "boundary" ? "Use this field area" : "Use this location"}
-        </button>
+        </Button>
       </div>
     </div>
   );

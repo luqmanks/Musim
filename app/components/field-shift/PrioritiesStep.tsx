@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import type { Dispatch, SetStateAction } from "react";
 import type { PriorityKey } from "../../lib/field-shift";
 import { PRIORITIES } from "./config";
@@ -11,20 +13,21 @@ type PrioritiesStepProps = {
 export function PrioritiesStep({ priorities, setPriorities, onCompare }: PrioritiesStepProps) {
   return (
     <div className="priority-content">
-      <div className="instruction-card"><span>3</span><p><strong>There is no wrong answer.</strong> Your priorities change how each rotation is scored.</p></div>
+      <p className="step-note">Set what matters most. This changes how each rotation is ranked.</p>
       <div className="priority-list">
-        {PRIORITIES.map((priority) => (
-          <label key={priority.key} className="priority-row">
-            <span><strong>{priority.label}</strong><small>{priority.description}</small></span>
-            <span className="priority-control">
-              <input type="range" min="1" max="5" step="1" value={priorities[priority.key]} onChange={(event) => setPriorities((current) => ({ ...current, [priority.key]: Number(event.target.value) }))} aria-label={`${priority.label} priority`} />
-              <span className="range-ends" aria-hidden="true"><small>Helpful</small><small>Essential</small></span>
-            </span>
-            <output>{priorities[priority.key] === 5 ? "Essential" : priorities[priority.key] >= 3 ? "Important" : "Helpful"}</output>
-          </label>
-        ))}
+        {PRIORITIES.map((priority) => {
+          const value = priorities[priority.key];
+          const valueLabel = value === 5 ? "Essential" : value >= 3 ? "Important" : "Helpful";
+          return (
+            <div key={priority.key} className="priority-row">
+              <label htmlFor={`priority-${priority.key}`}><strong>{priority.label}</strong><small>{priority.description}</small></label>
+              <Slider id={`priority-${priority.key}`} min={1} max={5} step={1} value={[value]} onValueChange={([nextValue]) => setPriorities((current) => ({ ...current, [priority.key]: nextValue }))} aria-label={`${priority.label} priority`} />
+              <output>{valueLabel}</output>
+            </div>
+          );
+        })}
       </div>
-      <div className="step-footer"><button className="primary-button" type="button" onClick={onCompare}>Compare rotations</button></div>
+      <div className="step-footer"><Button className="step-primary" size="lg" type="button" onClick={onCompare}>Compare rotations</Button></div>
     </div>
   );
 }

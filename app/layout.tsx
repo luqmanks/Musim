@@ -1,33 +1,23 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
+﻿import type { Metadata } from "next";
 import "./globals.css";
+import { Inter } from "next/font/google";
+import { cn } from "@/lib/utils";
 
-const nunito = localFont({
-  src: "../public/fonts/Nunito-Regular.otf",
-  variable: "--font-nunito",
-  weight: "400",
-  display: "swap",
-});
-
-const bebasNeue = localFont({
-  src: "../public/fonts/BebasNeue-Regular.otf",
-  variable: "--font-bebas-neue",
-  weight: "400",
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Musim — Field Shift Malaysia",
+  title: "Musim - Field Shift Malaysia",
   description:
     "Explore climate-resilient crop rotations using NASA Earth observations and local farm priorities.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${nunito.variable} ${bebasNeue.variable} h-full antialiased`}
-    >
+    <html lang="en" className={cn("h-full font-sans antialiased", inter.variable)}>
       <head>
         <link rel="preconnect" href="https://tile.openstreetmap.org" />
         <link rel="preconnect" href="https://gibs.earthdata.nasa.gov" />

@@ -77,19 +77,19 @@ function addBoundaryLayers(map: MLMap) {
     id: "selected-field-fill",
     type: "fill",
     source: BOUNDARY_FILL_SOURCE,
-    paint: { "fill-color": "#a8cf45", "fill-opacity": 0.24 },
+    paint: { "fill-color": "#009966", "fill-opacity": 0.24 },
   });
   map.addLayer({
     id: "selected-field-line",
     type: "line",
     source: BOUNDARY_LINE_SOURCE,
-    paint: { "line-color": "#f7f5eb", "line-width": 4 },
+    paint: { "line-color": "#ecfdf5", "line-width": 4 },
   });
   map.addLayer({
     id: "selected-field-line-accent",
     type: "line",
     source: BOUNDARY_LINE_SOURCE,
-    paint: { "line-color": "#507326", "line-width": 2 },
+    paint: { "line-color": "#007a55", "line-width": 2 },
   });
   map.addLayer({
     id: "selected-field-points",
@@ -97,8 +97,8 @@ function addBoundaryLayers(map: MLMap) {
     source: BOUNDARY_POINT_SOURCE,
     paint: {
       "circle-radius": 6,
-      "circle-color": "#a8cf45",
-      "circle-stroke-color": "#fffefa",
+      "circle-color": "#009966",
+      "circle-stroke-color": "#ecfdf5",
       "circle-stroke-width": 3,
     },
   });

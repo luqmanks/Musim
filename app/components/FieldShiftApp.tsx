@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import FieldMap, { type ImageryStatus, type MapLayerKey, type SelectionMode } from "./FieldMap";
 import {
   DEFAULT_PRIORITIES,
@@ -156,19 +157,18 @@ export default function FieldShiftApp() {
       <header className="topbar">
         <Brand />
         <div className="top-actions">
-          <span className="language-button" aria-label="English interface; Bahasa Melayu planned">EN <span>· BM soon</span></span>
-          <button className="icon-button" type="button" onClick={() => setInfoOpen(true)} aria-label="About this tool"><Icon name="info" /></button>
-          {step === "results" && <button className="share-button" type="button" onClick={() => setShareOpen(true)}><Icon name="share" /> Save & share</button>}
+          <Button className="icon-button" variant="ghost" size="icon" type="button" onClick={() => setInfoOpen(true)} aria-label="About this tool"><Icon name="info" /></Button>
+          {step === "results" && <Button className="share-button" type="button" onClick={() => setShareOpen(true)}><Icon name="share" /> Share</Button>}
         </div>
       </header>
 
       <section id="workspace" className={`workspace-panel ${step === "results" ? "results-panel" : ""}`} aria-labelledby="panel-title">
         {step !== "results" && <StepProgress step={step} />}
-        {step !== "locate" && step !== "results" && <button className="back-button" type="button" onClick={goBack}><Icon name="back" /> Back</button>}
+        {step !== "locate" && step !== "results" && <Button className="back-button" variant="ghost" type="button" onClick={goBack}><Icon name="back" /> Back</Button>}
         {step !== "results" && (
           <div className="panel-intro">
             <h1 id="panel-title">{panelTitle}</h1>
-            <p>{step === "locate" ? "Draw your field for closer map context, or place one point for a quick estimate." : step === "details" ? `Question ${detailQuestion + 1} of 4 · answer what you know and skip what you don’t.` : "Move the sliders to show what matters most on your farm."}</p>
+            <p>{step === "locate" ? "Draw the boundary or place one point." : step === "details" ? `Question ${detailQuestion + 1} of 4 · skip anything you don’t know.` : "Set what matters most on your farm."}</p>
           </div>
         )}
 

@@ -1,4 +1,7 @@
 import type { ImageryStatus, MapLayerKey } from "../FieldMap";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { MAP_LAYERS } from "./config";
 
 type MapEvidenceDockProps = {
@@ -39,24 +42,22 @@ export function MapEvidenceDock({ mapLayer, imageryStatus, onLayerChange }: MapE
 
   return (
     <aside className="map-evidence-dock" aria-label="Map evidence">
-      <div className="map-layer-control" role="group" aria-label="Map view">
+      <Card className="map-layer-control" role="group" aria-label="Map view">
         <span className="map-layer-label">Map view</span>
         <div className="map-layer-options">
           {MAP_LAYERS.map((layer) => (
-            <button key={layer.key} type="button" aria-pressed={mapLayer === layer.key} title={layer.note} onClick={() => onLayerChange(layer.key)}>
-              <span className={`layer-key layer-key-${layer.key}`} aria-hidden="true" />
+            <Button key={layer.key} variant={mapLayer === layer.key ? "default" : "ghost"} size="sm" type="button" aria-pressed={mapLayer === layer.key} title={layer.note} onClick={() => onLayerChange(layer.key)}>
               {layer.label}
-            </button>
+            </Button>
           ))}
         </div>
-      </div>
+      </Card>
 
       {mapLayer !== "base" && (
-        <div className="layer-readout">
+        <Card className="layer-readout">
           <div className="layer-readout-header" role="status" aria-live="polite" aria-atomic="true">
-            <span className="nasa-pulse" aria-hidden="true" />
             <div><strong>{activeLayer.label}</strong><small>Observed {formatImageryDate(activeImageryDate)}</small></div>
-            <span className="source-chip">NASA</span>
+            <Badge variant="secondary" className="source-chip">NASA</Badge>
           </div>
           <p className="layer-takeaway">{guidance?.takeaway}</p>
           {mapLayer === "ground-heat" && (
@@ -67,7 +68,7 @@ export function MapEvidenceDock({ mapLayer, imageryStatus, onLayerChange }: MapE
             <p>{guidance?.detail}</p>
           </details>
           {imageryStatus.isFallback && <p className="layer-warning">Live imagery dates are unavailable. A recent fallback date is shown.</p>}
-        </div>
+        </Card>
       )}
     </aside>
   );

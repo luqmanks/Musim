@@ -1,7 +1,8 @@
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Dispatch, SetStateAction } from "react";
 import { CROPS, type FarmProfile } from "../../lib/field-shift";
 import type { FieldLocation } from "../../lib/field-shift";
-import { Icon } from "./SharedUi";
 
 type FarmDetailsStepProps = {
   question: number;
@@ -12,7 +13,7 @@ type FarmDetailsStepProps = {
 };
 
 const SOIL_CHOICES = [
-  ["unknown", "I don’t know", "We’ll mark this for a local expert to check"],
+  ["unknown", "I don’t know", "Add this to the local expert checklist"],
   ["clay-poor", "Clay · slow drainage", "Water stays after heavy rain"],
   ["loam", "Loam · moderate drainage", "Balanced texture and drainage"],
   ["sandy", "Sandy · fast drainage", "Dries quickly after rain"],
@@ -22,15 +23,27 @@ const SOIL_CHOICES = [
 const WATER_CHOICES = [
   ["reliable", "Reliable", "Irrigation is usually available"],
   ["seasonal", "Seasonal", "Availability changes through the year"],
-  ["limited", "Limited", "Dry periods often restrict planting"],
-  ["unknown", "I don’t know", "We’ll add this to the expert checklist"],
+  ["limited", "Limited", "Dry periods restrict planting"],
+  ["unknown", "I don’t know", "Add this to the expert checklist"],
 ] as const;
 
-export function FarmDetailsStep({ question, location, profile, setProfile, onNext }: FarmDetailsStepProps) {
+const EQUIPMENT_CHOICES = [
+  ["standard", "Standard paddy equipment"],
+  ["flexible", "Equipment for several crops"],
+  ["manual", "Mostly manual"],
+  ["unknown", "I don’t know"],
+] as const;
+
+const MARKET_CHOICES = [
+  ["local", "Local buyers available"],
+  ["contract", "Contract buyer"],
+  ["limited", "Limited buyers"],
+  ["unknown", "I don’t know"],
+] as const;
+
+export function FarmDetailsStep({ question, profile, setProfile, onNext }: FarmDetailsStepProps) {
   return (
     <div className="question-content">
-      <div className="selected-field-inline"><Icon name="pin" /><span><small>Working with</small><strong>{location?.name}</strong></span></div>
-
       {question === 0 && (
         <>
           <h2>What is your current rotation?</h2><p>Choose up to three consecutive seasons.</p>
@@ -38,9 +51,7 @@ export function FarmDetailsStep({ question, location, profile, setProfile, onNex
             {profile.rotation.map((crop, index) => (
               <label key={index}>
                 <span>Season {index + 1}</span>
-                <select name={`rotation-season-${index + 1}`} autoComplete="off" value={crop} onChange={(event) => setProfile((current) => ({ ...current, rotation: current.rotation.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))}>
-                  {CROPS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
-                </select>
+                <FieldSelect value={crop} options={CROPS.map((item) => [item.id, item.label] as const)} onChange={(value) => setProfile((current) => ({ ...current, rotation: current.rotation.map((item, itemIndex) => itemIndex === index ? value : item) }))} />
               </label>
             ))}
           </div>
@@ -49,59 +60,54 @@ export function FarmDetailsStep({ question, location, profile, setProfile, onNex
 
       {question === 1 && (
         <>
-          <h2>How would you describe the soil?</h2><p>If you are unsure, choose “I don’t know.” We’ll keep it visible for a local expert.</p>
+          <h2>How would you describe the soil?</h2><p>Choose “I don’t know” if you are unsure.</p>
           <ChoiceList choices={SOIL_CHOICES} selected={profile.soil} onSelect={(soil) => setProfile((current) => ({ ...current, soil }))} />
         </>
       )}
 
       {question === 2 && (
         <>
-          <h2>How reliable is field water?</h2><p>Think about irrigation and usable water during dry weeks.</p>
+          <h2>How reliable is field water?</h2><p>Think about usable water during dry weeks.</p>
           <ChoiceList choices={WATER_CHOICES} selected={profile.water} onSelect={(water) => setProfile((current) => ({ ...current, water }))} />
         </>
       )}
 
       {question === 3 && (
         <>
-          <h2>What could limit a new crop?</h2><p>Equipment and buyers matter as much as field conditions when a rotation changes.</p>
-          <label className="field-label">
-            Equipment
-            <select name="equipment" autoComplete="off" className="select-control" value={profile.equipment} onChange={(event) => setProfile((current) => ({ ...current, equipment: event.target.value }))}>
-              <option value="standard">Standard paddy equipment</option><option value="flexible">Equipment for several crops</option><option value="manual">Mostly manual</option><option value="unknown">I don’t know</option>
-            </select>
+          <h2>What could limit a new crop?</h2><p>Equipment and buyers can shape what is practical.</p>
+          <label className="field-label">Equipment
+            <FieldSelect value={profile.equipment} options={EQUIPMENT_CHOICES} onChange={(equipment) => setProfile((current) => ({ ...current, equipment }))} />
           </label>
-          <label className="field-label">
-            Market access
-            <select name="market-access" autoComplete="off" className="select-control" value={profile.market} onChange={(event) => setProfile((current) => ({ ...current, market: event.target.value }))}>
-              <option value="local">Local buyers available</option><option value="contract">Contract buyer</option><option value="limited">Limited buyers</option><option value="unknown">I don’t know</option>
-            </select>
+          <label className="field-label">Market access
+            <FieldSelect value={profile.market} options={MARKET_CHOICES} onChange={(market) => setProfile((current) => ({ ...current, market }))} />
           </label>
         </>
       )}
 
       <div className="question-actions step-footer">
-        <button className="text-button" type="button" onClick={onNext}>Skip for now</button>
-        <button className="primary-button" type="button" onClick={onNext}>{question === 3 ? "Set priorities" : "Next question"}</button>
+        <Button variant="ghost" size="lg" type="button" onClick={onNext}>Skip</Button>
+        <Button className="step-primary" size="lg" type="button" onClick={onNext}>{question === 3 ? "Set priorities" : "Continue"}</Button>
       </div>
     </div>
   );
 }
 
-function ChoiceList({
-  choices,
-  selected,
-  onSelect,
-}: {
-  choices: ReadonlyArray<readonly [string, string, string]>;
-  selected: string;
-  onSelect: (value: string) => void;
-}) {
+function FieldSelect({ value, options, onChange }: { value: string; options: ReadonlyArray<readonly [string, string]>; onChange: (value: string) => void }) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="shadcn-select"><SelectValue /></SelectTrigger>
+      <SelectContent>{options.map(([optionValue, label]) => <SelectItem key={optionValue} value={optionValue}>{label}</SelectItem>)}</SelectContent>
+    </Select>
+  );
+}
+
+function ChoiceList({ choices, selected, onSelect }: { choices: ReadonlyArray<readonly [string, string, string]>; selected: string; onSelect: (value: string) => void }) {
   return (
     <div className="choice-list">
       {choices.map(([value, label, note]) => (
-        <button type="button" key={value} className={selected === value ? "choice selected" : "choice"} aria-pressed={selected === value} onClick={() => onSelect(value)}>
+        <Button type="button" variant="outline" key={value} className={selected === value ? "choice selected" : "choice"} aria-pressed={selected === value} onClick={() => onSelect(value)}>
           <span>{label}<small>{note}</small></span><i aria-hidden="true" />
-        </button>
+        </Button>
       ))}
     </div>
   );

@@ -42,3 +42,7 @@ next-env.d.ts
 
 # copied from node_modules by scripts/copy-maplibre-worker.mjs
 /public/maplibre-gl-worker.mjs
+
+# local Impeccable browser captures
+/.impeccable/chrome-*/
+/.impeccable/review/
