@@ -1,4 +1,5 @@
 import type { ClimateSummary, FarmProfile, PriorityKey, RotationScore, ScenarioKey } from "../../lib/field-shift";
+import { climateInsight, scenarioNote } from "../../lib/field-shift";
 import { CropCheckTab } from "./CropCheckTab";
 import { cropLabel } from "../../lib/field-shift";
 import { PRIORITIES, SCENARIOS, type ResultTab } from "./config";
@@ -9,6 +10,8 @@ type ResultsStepProps = {
   location: FieldLocation | null;
   climate: ClimateSummary | null;
   loading: boolean;
+  error: string;
+  onRetry: () => void;
   resultTab: ResultTab;
   scenario: ScenarioKey;
   results: RotationScore[];
@@ -22,6 +25,8 @@ export function ResultsStep({
   location,
   climate,
   loading,
+  error,
+  onRetry,
   resultTab,
   scenario,
   results,
@@ -30,6 +35,7 @@ export function ResultsStep({
   onTabChange,
   onScenarioChange,
 }: ResultsStepProps) {
+  const insight = climate ? climateInsight(climate) : null;
   return (
     <div className="results-content">
       <div className="result-header">
@@ -52,17 +58,24 @@ export function ResultsStep({
         </div>
       )}
 
+      {!loading && error && resultTab !== "crops" && (
+        <div className="data-warning" role="alert">
+          <strong>NASA POWER data could not be loaded</strong>
+          <span>{error} Nothing is shown in its place, because results need real data.</span>
+          <button className="edit-button" type="button" onClick={onRetry}>Try again</button>
+        </div>
+      )}
+
       {!loading && climate && resultTab === "conditions" && (
         <div id="conditions-panel" className="conditions-view" role="tabpanel" aria-labelledby="conditions-tab">
-          {climate.isFallback && <div className="data-warning"><strong>Demonstration climate shown</strong><span>The live NASA request was unavailable. Scores are clearly marked as lower confidence.</span></div>}
           <div className="conditions-summary">
             <div className="metric-row">
               <div><span>Typical rainfall</span><strong>{Math.round(climate.annualRainMm).toLocaleString()} <small>mm/yr</small></strong></div>
               <div><span>Average temperature</span><strong>{climate.meanTempC.toFixed(1)} <small>°C</small></strong></div>
               <div><span>Wettest month</span><strong>{climate.wettestMonth}</strong></div>
-              <div><span>Drier months</span><strong>{climate.dryMonths}</strong></div>
+              <div title="Months where rain (mm) is below twice the mean temperature (°C)"><span>Dry months (Gaussen)</span><strong>{climate.dryMonths}</strong></div>
             </div>
-            <div className="insight-callout"><span aria-hidden="true">↳</span><p><strong>What this means: {climate.wettestMonth} has the strongest heavy-rain pressure.</strong> Keep living cover on the soil where possible and confirm drainage in the field.</p></div>
+            <div className="insight-callout"><span aria-hidden="true">↳</span><p><strong>What this means: {insight?.headline}</strong> {insight?.detail}</p></div>
             <div className="provenance-card">
               <div><span>Source</span><strong>{climate.source}</strong></div><div><span>Period</span><strong>{climate.period}</strong></div><div><span>Spatial context</span><strong>{climate.resolution}</strong></div>
               <a href={climate.sourceUrl} target="_blank" rel="noreferrer">Open NASA source</a>
@@ -78,10 +91,10 @@ export function ResultsStep({
       {!loading && climate && resultTab === "rotations" && (
         <div id="rotations-panel" className="rotations-view" role="tabpanel" aria-labelledby="rotations-tab">
           <div className="scenario-control">
-            <div><strong>Stress-test the plan</strong><span>{SCENARIOS.find((item) => item.key === scenario)?.note}</span></div>
+            <div><strong>Stress-test the plan</strong><span>{scenarioNote(climate, scenario)}</span></div>
             <div>{SCENARIOS.map((item) => <button key={item.key} type="button" aria-pressed={scenario === item.key} onClick={() => onScenarioChange(item.key)}>{item.label}</button>)}</div>
           </div>
-          <div className="rotation-cards">{results.map((result) => <RotationCard key={result.id} result={result} featured={result.id === "conservative"} />)}</div>
+          <div className="rotation-cards">{results.map((result, index) => <RotationCard key={result.id} result={result} featured={index === 1} />)}</div>
           <p className="decision-note"><strong>Use this as a conversation guide.</strong> Confirm crop timing, drainage, seed access and prices with a local agricultural officer before changing your rotation.</p>
         </div>
       )}
@@ -91,6 +104,10 @@ export function ResultsStep({
 
 function ClimateTimeline({ climate }: { climate: ClimateSummary }) {
   const maxRain = Math.max(...climate.monthly.map((month) => month.rainMm), 1);
+  const temps = climate.monthly.map((month) => month.maxTempC);
+  const minT = Math.min(...temps);
+  const spanT = Math.max(...temps) - minT;
+  const markAt = (t: number) => (spanT > 0 ? 14 + ((t - minT) / spanT) * 72 : 50);
 
   return (
     <div className="timeline-card">
@@ -101,7 +118,7 @@ function ClimateTimeline({ climate }: { climate: ClimateSummary }) {
       <div className="climate-timeline" role="img" aria-label="Monthly rainfall and temperature timeline">
         {climate.monthly.map((month) => (
           <div className="month-column" key={month.month}>
-            <div className="temperature-mark" style={{ bottom: `${Math.max(14, (month.maxTempC - 28) * 8)}%` }} title={`${month.maxTempC.toFixed(1)} °C maximum`} />
+            <div className="temperature-mark" style={{ bottom: `${markAt(month.maxTempC)}%` }} title={`${month.maxTempC.toFixed(1)} °C maximum`} />
             <div className="rain-bar" style={{ height: `${Math.max(6, (month.rainMm / maxRain) * 82)}%` }} title={`${Math.round(month.rainMm)} mm rain`} />
             <span>{month.label}</span>
           </div>
@@ -122,7 +139,7 @@ function RotationCard({ result, featured }: { result: RotationScore; featured?: 
         <div className="overall-score"><span>Fit score</span><div><strong>{result.total}</strong><small>/100</small></div></div>
       </header>
       <div className="crop-sequence">
-        {result.crops.map((crop, index) => <div key={`${crop}-${index}`}><span>{index + 1}</span><strong>{cropLabel(crop)}</strong>{index < result.crops.length - 1 && <i aria-hidden="true" />}</div>)}
+        {result.crops.map((crop, index) => <div key={`${crop}-${index}`}><span>{index + 1}</span><strong>{cropLabel(crop)}</strong><small>{result.seasons[index].window} · {Math.round(result.seasons[index].rainMm)} mm</small>{index < result.crops.length - 1 && <i aria-hidden="true" />}</div>)}
       </div>
       <div className="score-grid">
         {keyScores.map((key) => <div key={key}><span>{PRIORITIES.find((item) => item.key === key)?.label}</span><strong>{result.scores[key]}</strong><div role="meter" aria-label={`${PRIORITIES.find((item) => item.key === key)?.label} score`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={result.scores[key]}><i style={{ width: `${result.scores[key]}%` }} /></div></div>)}

@@ -29,6 +29,7 @@ export type PowerData = {
   lng: number;
   lat: number;
   elevation: number | null;
+  meta: { title: string | null; sources: string[] }; // from the NASA response header
   dates: string[]; // ISO YYYY-MM-DD, oldest first
   series: Record<PowerParam, (number | null)[]>;
   lastValid: Record<PowerParam, number>; // index into dates, -1 if none
@@ -52,7 +53,7 @@ export function powerUrl(lng: number, lat: number, startIso: string, endIso: str
 
 type RawResponse = {
   geometry?: { coordinates?: number[] };
-  header?: { fill_value?: number };
+  header?: { fill_value?: number; title?: string; sources?: string[] };
   properties?: { parameter?: Record<string, Record<string, number>> };
   messages?: string[];
 };
@@ -76,7 +77,8 @@ export function parsePower(raw: RawResponse, lng: number, lat: number): PowerDat
     lastValid[id] = last;
   }
   const elev = raw.geometry?.coordinates?.[2];
-  return { lng, lat, elevation: typeof elev === "number" ? elev : null, dates, series, lastValid };
+  const meta = { title: raw.header?.title ?? null, sources: raw.header?.sources ?? [] };
+  return { lng, lat, elevation: typeof elev === "number" ? elev : null, meta, dates, series, lastValid };
 }
 
 const cache = new Map<string, PowerData>();

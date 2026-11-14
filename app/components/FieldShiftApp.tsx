@@ -32,6 +32,7 @@ export default function FieldShiftApp() {
   const [priorities, setPriorities] = useState(DEFAULT_PRIORITIES);
   const [climate, setClimate] = useState<ClimateSummary | null>(null);
   const [loading, setLoading] = useState(false);
+  const [climateError, setClimateError] = useState("");
   const [resultTab, setResultTab] = useState<ResultTab>("conditions");
   const [scenario, setScenario] = useState<ScenarioKey>("typical");
   const [mapLayer, setMapLayer] = useState<MapLayerKey>("base");
@@ -116,13 +117,16 @@ export default function FieldShiftApp() {
     if (!location) return;
     setStep("results");
     setLoading(true);
+    setClimate(null);
+    setClimateError("");
     setResultTab("conditions");
     try {
       const response = await fetch(`/api/nasa/power?lat=${location.lat}&lng=${location.lng}`);
-      if (!response.ok) throw new Error("Climate service unavailable");
-      setClimate(await response.json());
-    } catch {
-      setToast("Climate data could not be loaded. Return and try again.");
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error ?? "Climate service unavailable");
+      setClimate(body);
+    } catch (error) {
+      setClimateError(error instanceof Error ? error.message : "Climate data could not be loaded.");
     } finally {
       setLoading(false);
     }
@@ -193,6 +197,8 @@ export default function FieldShiftApp() {
             location={location}
             climate={climate}
             loading={loading}
+            error={climateError}
+            onRetry={compareRotations}
             resultTab={resultTab}
             scenario={scenario}
             results={results}

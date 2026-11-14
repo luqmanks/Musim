@@ -17,7 +17,7 @@ shows its evidence, assumptions, risks, information gaps, and confidence.
 1. Draw a field boundary, place one point, or open a Malaysian demo farm.
 2. Describe the current crop sequence, soil, water, equipment, and market.
 3. Weight water, soil health, income, erosion, nitrogen, and practicality.
-4. Review a 2021–2025 climate profile and dated NASA map evidence.
+4. Review a five-year NASA climate profile (the last five complete years) and dated NASA map evidence.
 5. Compare three rotations under typical, drier, wetter, and +1 °C sensitivity
    scenarios.
 6. Print an expert-handoff summary with risks and unanswered questions.
@@ -43,8 +43,8 @@ into comparable three-season options. Every option exposes evidence, trade-offs,
 risks, missing information, and confidence, then produces questions for a local
 expert.
 
-The POWER route returns a clearly marked demonstration climatology if the live
-service cannot respond. Fallback data lowers recommendation confidence.
+There is no stand-in climate data. If NASA POWER cannot respond, the POWER route
+returns an error and the interface says so.
 
 ## Run locally
 
@@ -109,18 +109,22 @@ GEMINI_MODEL=gemini-3.8-flash
 - NASA GIBS raster overlays
 - Server-side `/api/nasa/power` proxy and monthly aggregation (fetches through `app/lib/power.ts`)
 - Rule-based crop check (`app/lib/cropRules.ts`) and a Gemini advisor (`/api/advisor`, Vercel AI SDK)
-- Deterministic, priority-weighted rotation engine
+- Deterministic, priority-weighted rotation engine computed from the NASA climate
 - Local fonts and responsive CSS; no external UI framework
 
-The crop-trait values in V1 are transparent prototype assumptions. They must be
-reviewed with Malaysian agronomists and replaced with cited local crop calendars,
-soil constraints, costs, and market evidence before operational use. See
+Climate, season windows, water balance, erosion exposure, scenarios and all
+explanation text are computed from NASA POWER. What NASA cannot supply, such as how
+much water a crop needs, lives in one table (`app/lib/crop-reference.ts`) of
+approximate agronomic requirements. Those figures are unreviewed prototype
+assumptions. They must be reviewed with Malaysian agronomists and replaced with
+cited local crop calendars, soil constraints, costs, and market evidence before
+operational use. See
 [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md).
 
 ## Team standards
 
 - Never present regional satellite data as a precise field measurement.
-- Label synthetic or demonstration data visibly.
+- Never show stand-in data as if it were NASA data; show an error instead.
 - Cite every dataset, asset, and agronomic rule.
 - Prefer explainable calculations over unsupported AI claims.
 - Preserve missing information as a gap; never silently invent it.

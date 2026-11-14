@@ -11,8 +11,8 @@ crop.
 
 ## Environmental profile
 
-The server requests daily NASA POWER data for 2021–2025 at the selected
-coordinate:
+The server requests daily NASA POWER data for the last five complete calendar
+years at the selected coordinate (the period is computed from today's date):
 
 - `T2M`: mean air temperature at 2 m
 - `T2M_MAX`: maximum air temperature at 2 m
@@ -20,9 +20,15 @@ coordinate:
 - `RH2M`: relative humidity at 2 m
 - `ALLSKY_SFC_SW_DWN`: surface solar radiation
 
-Daily observations are aggregated into a typical month across the five-year
-period. Annual rainfall is the sum of those 12 typical months. The interface
-retains the source, date range, spatial resolution, and fallback status.
+Daily values become monthly values for each year (rain is the mean of the valid
+days times the days in the month, so a few missing days do not undercount). The
+typical year is the mean of each month across the years. A month counts as dry
+by the Gaussen test when its rain in mm is below twice its mean temperature in
+°C. The interface shows the source, period, grid description (taken from the NASA
+response header) and the share of daily values NASA returned.
+
+There is no stand-in climate. If NASA POWER cannot answer, the route returns an
+error and the interface says so instead of showing numbers.
 
 NASA SMAP soil-moisture imagery and MODIS daytime land-surface temperature are
 displayed through NASA EOSDIS GIBS. The server reads each layer's current
@@ -41,11 +47,29 @@ aggregation is a planned validation step, not a current claim.
 
 ## Rotation score
 
-V1 assigns transparent prototype trait values to each supported crop for water
-resilience, soil health, income opportunity, erosion protection, nitrogen, and
-practicality. The engine averages crop traits and applies documented adjustments
-for diversity, repetition, legumes, fallow, water, markets, climate, and the
-selected sensitivity scenario.
+Nothing in the score is typed in per crop as a rating. Each criterion is
+computed from the NASA climate and a short table of crop requirements
+(`app/lib/crop-reference.ts`: water need per cycle, temperature range, rain the
+crop tolerates on slow-draining soil, nitrogen fixing, botanical family, soil
+exposure and equipment).
+
+1. **Seasons.** A plan is three four-month seasons. Season 1 starts at the first
+   month of the wettest four-month stretch of the typical year.
+2. **Climate fit** for each crop in each season: rain plus the irrigation the
+   farmer says is available, against the crop's water need; a drainage penalty
+   when the farmer reports slow-draining soil and rain exceeds what the crop
+   tolerates; and a temperature fit against the crop's comfortable and failure
+   temperatures.
+3. **Criteria (0-100).**
+   - Water saving: the rain shortfall (mm) the crops would need irrigation to cover.
+   - Soil health: crop-family diversity, back-to-back repeats, and whether a legume is present.
+   - Income potential: climate fit of the seasons that produce a harvest.
+   - Erosion protection: each season's share of peak rainfall times the crop's soil exposure.
+   - Nitrogen supply: the share of seasons with a nitrogen-fixing crop.
+   - Practicality: how many seasons match today's rotation, and whether the farmer's equipment can run each crop.
+4. **Options.** The engine scores all three-season combinations of the supported
+   crops and shows the best fit for the farmer's priorities and the best
+   one-season change from today's rotation.
 
 ```text
 sum(criterion score × farmer priority weight)
@@ -53,32 +77,41 @@ sum(criterion score × farmer priority weight)
           sum(farmer priority weights)
 ```
 
-The score is a comparison aid, not a probability or forecast.
+The score is a comparison aid, not a probability or forecast. The reasons, risks
+and evidence on each card are written from these computed numbers.
 
 ## Confidence
 
-Confidence begins with environmental-data quality and changes according to live
-NASA POWER success, known soil, water reliability, market access, and the added
-uncertainty of an alternative practice. Every unknown input remains visible as
-an information gap.
+High confidence needs no information gaps (unknown soil, water, market or
+equipment answers, or missing NASA days), no season where the climate fails to
+meet a crop, and an option that still beats today's rotation in the driest,
+wettest and hottest observed years. Otherwise confidence is Moderate (up to two
+gaps) or Low. Every unknown input remains visible as an information gap.
 
 ## Sensitivity scenarios
 
-- **Typical:** observed 2021–2025 profile
-- **Drier:** qualitative sensitivity test for lower water availability
-- **Wetter:** qualitative sensitivity test for stronger rainfall pressure
-- **+1 °C:** qualitative heat sensitivity test
+Each scenario re-runs the scoring on a year that NASA actually observed in the
+period:
 
-These controls are not climate projections. The interface labels them as
-sensitivity tests.
+- **Typical:** the average year
+- **Driest year:** the year with the least annual rain
+- **Wettest year:** the year with the most annual rain
+- **Hottest year:** the year with the highest mean temperature
+
+These are observed years, not climate projections.
+
+## What does not come from NASA
+
+NASA POWER cannot say how much water a crop needs, which crops a farmer's
+buyers want, or what equipment they own. Those come from the crop requirement
+table and the farmer's answers. Both are labelled as such in the interface.
 
 ## Required validation before field use
 
-1. Review crop traits with MARDI, the Department of Agriculture, or a qualified
-   local agronomist.
+1. Review `crop-reference.ts` with MARDI, the Department of Agriculture, or a
+   qualified local agronomist and replace the approximate values with cited ones.
 2. Add Malaysian planting windows by region and irrigation scheme.
 3. Validate soil compatibility against licensed local soil information.
 4. Replace generic income opportunity with user-entered costs and local prices.
 5. Test the workflow with farmers and extension officers.
 6. Compare satellite indicators with field observations.
-

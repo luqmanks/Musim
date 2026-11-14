@@ -346,6 +346,7 @@ input[type="range"] { accent-color: var(--paddy-dark); }
 .crop-sequence > div { position: relative; flex: 1; display: grid; justify-items: center; gap: 3px; text-align: center; }
 .crop-sequence span { width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid rgba(80,115,38,.35); border-radius: 50%; background: var(--white); color: var(--paddy-dark); font-size: 10px; font-weight: 800; }
 .crop-sequence strong { font-size: 11px; line-height: 1.25; }
+.crop-sequence small { color: var(--ink-soft); font-size: 10px; line-height: 1.2; }
 .crop-sequence i { position: absolute; left: calc(50% + 14px); top: 10px; width: calc(100% - 28px); border-top: 1px solid rgba(80,115,38,.35); }
 .score-grid { display: grid; gap: 12px; padding: 16px; }
 .score-grid > div { display: grid; grid-template-columns: 1fr 22px; gap: 4px; align-items: center; }

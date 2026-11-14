@@ -29,11 +29,12 @@ export const PRIORITIES: Array<{
   { key: "practicality", label: "Keep it practical", description: "Limit new equipment and major changes." },
 ];
 
-export const SCENARIOS: Array<{ key: ScenarioKey; label: string; note: string }> = [
-  { key: "typical", label: "Typical", note: "Five-year NASA climate profile" },
-  { key: "dry", label: "Drier", note: "Sensitivity test: lower water availability" },
-  { key: "wet", label: "Wetter", note: "Sensitivity test: heavier rain pressure" },
-  { key: "hotter", label: "+1 °C", note: "Sensitivity test: hotter conditions" },
+// Notes are written from the NASA data at display time (see scenarioNote in lib/field-shift.ts).
+export const SCENARIOS: Array<{ key: ScenarioKey; label: string }> = [
+  { key: "typical", label: "Typical" },
+  { key: "dry", label: "Driest year" },
+  { key: "wet", label: "Wettest year" },
+  { key: "hotter", label: "Hottest year" },
 ];
 
 export const MAP_LAYERS: Array<{ key: MapLayerKey; label: string; note: string }> = [

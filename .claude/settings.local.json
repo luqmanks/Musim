@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -sk \"https://www.spaceappschallenge.org/2026/challenges/adapting-farms-with-nasa-data/?tab=resources\" -o C:/tmp/spaceapps.html)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(python3 *)",
+      "Bash(curl -s \"https://power.larc.nasa.gov/api/temporal/climatology/regional?parameters=T2M&community=AG&latitude-min=1.2&latitude-max=6.7&longitude-min=99.6&longitude-max=104.9&format=geojson&user=test\")",
+      "Bash(curl -s \"https://power.larc.nasa.gov/api/temporal/climatology/regional?parameters=T2M&community=AG&latitude-min=1.2&latitude-max=6.7&longitude-min=99.6&longitude-max=104.9&format=json&user=test\")",
+      "Bash(curl -s \"https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=T2M&community=AG&longitude=101.69&latitude=3.14&start=199401&end=202312&format=json&user=test\")",
+      "Bash(curl -s \"https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=T2M&community=AG&longitude=101.69&latitude=3.14&start=19940101&end=20231231&format=json&user=test\")",
+      "Bash(curl -s \"https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=T2M&community=AG&longitude=101.69&latitude=3.14&start=19940101&end=20231231&format=json&user=test\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s \"https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=T2M&community=AG&longitude=101.69&latitude=3.14&start=1994&end=2023&format=json&user=test\")",
+      "Bash(curl -s \"https://power.larc.nasa.gov/api/temporal/climatology/regional?parameters=T2M,T2M_MAX,T2M_MIN,PRECTOTCORR,ALLSKY_SFC_SW_DWN,RH2M,WS2M,T2MDEW,EVPTRNS&community=AG&latitude-min=1.2&latitude-max=6.7&longitude-min=99.6&longitude-max=104.9&format=json&user=test\")",
+      "Bash(curl -s \"https://power.larc.nasa.gov/api/temporal/climatology/regional?parameters=T2M,PRECTOTCORR&community=AG&latitude-min=1.2&latitude-max=6.7&longitude-min=99.6&longitude-max=104.9&format=json&user=test\")",
+      "Bash(curl -s \"https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M,PRECTOTCORR,ALLSKY_SFC_SW_DWN,RH2M,WS2M,T2M_MAX,T2M_MIN,T2MDEW&community=AG&longitude=101.69&latitude=3.14&format=json&user=test\")"
+    ]
+  }
+}
