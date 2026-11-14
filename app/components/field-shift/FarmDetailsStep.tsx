@@ -12,7 +12,7 @@ type FarmDetailsStepProps = {
 };
 
 const SOIL_CHOICES = [
-  ["unknown", "I don’t know", "We will lower confidence"],
+  ["unknown", "I don’t know", "We’ll mark this for a local expert to check"],
   ["clay-poor", "Clay · slow drainage", "Water stays after heavy rain"],
   ["loam", "Loam · moderate drainage", "Balanced texture and drainage"],
   ["sandy", "Sandy · fast drainage", "Dries quickly after rain"],
@@ -23,7 +23,7 @@ const WATER_CHOICES = [
   ["reliable", "Reliable", "Irrigation is usually available"],
   ["seasonal", "Seasonal", "Availability changes through the year"],
   ["limited", "Limited", "Dry periods often restrict planting"],
-  ["unknown", "I don’t know", "Add this to the expert checklist"],
+  ["unknown", "I don’t know", "We’ll add this to the expert checklist"],
 ] as const;
 
 export function FarmDetailsStep({ question, location, profile, setProfile, onNext }: FarmDetailsStepProps) {
@@ -49,7 +49,7 @@ export function FarmDetailsStep({ question, location, profile, setProfile, onNex
 
       {question === 1 && (
         <>
-          <h2>How would you describe the soil?</h2><p>If you are unsure, we record this as an information gap.</p>
+          <h2>How would you describe the soil?</h2><p>If you are unsure, choose “I don’t know.” We’ll keep it visible for a local expert.</p>
           <ChoiceList choices={SOIL_CHOICES} selected={profile.soil} onSelect={(soil) => setProfile((current) => ({ ...current, soil }))} />
         </>
       )}
@@ -63,7 +63,7 @@ export function FarmDetailsStep({ question, location, profile, setProfile, onNex
 
       {question === 3 && (
         <>
-          <h2>What could limit a new crop?</h2><p>These answers prevent unrealistic suggestions.</p>
+          <h2>What could limit a new crop?</h2><p>Equipment and buyers matter as much as field conditions when a rotation changes.</p>
           <label className="field-label">
             Equipment
             <select name="equipment" autoComplete="off" className="select-control" value={profile.equipment} onChange={(event) => setProfile((current) => ({ ...current, equipment: event.target.value }))}>
@@ -79,7 +79,7 @@ export function FarmDetailsStep({ question, location, profile, setProfile, onNex
         </>
       )}
 
-      <div className="question-actions">
+      <div className="question-actions step-footer">
         <button className="text-button" type="button" onClick={onNext}>Skip for now</button>
         <button className="primary-button" type="button" onClick={onNext}>{question === 3 ? "Set priorities" : "Next question"}</button>
       </div>
@@ -99,8 +99,8 @@ function ChoiceList({
   return (
     <div className="choice-list">
       {choices.map(([value, label, note]) => (
-        <button type="button" key={value} className={selected === value ? "choice selected" : "choice"} onClick={() => onSelect(value)}>
-          <span>{label}<small>{note}</small></span><i />
+        <button type="button" key={value} className={selected === value ? "choice selected" : "choice"} aria-pressed={selected === value} onClick={() => onSelect(value)}>
+          <span>{label}<small>{note}</small></span><i aria-hidden="true" />
         </button>
       ))}
     </div>

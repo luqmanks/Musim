@@ -11,17 +11,20 @@ type PrioritiesStepProps = {
 export function PrioritiesStep({ priorities, setPriorities, onCompare }: PrioritiesStepProps) {
   return (
     <div className="priority-content">
-      <div className="instruction-card"><span>3</span><p><strong>Set what matters most.</strong> Move each slider from helpful to essential, then compare the rotations.</p></div>
+      <div className="instruction-card"><span>3</span><p><strong>There is no wrong answer.</strong> Your priorities change how each rotation is scored.</p></div>
       <div className="priority-list">
         {PRIORITIES.map((priority) => (
           <label key={priority.key} className="priority-row">
             <span><strong>{priority.label}</strong><small>{priority.description}</small></span>
-            <input type="range" min="1" max="5" step="1" value={priorities[priority.key]} onChange={(event) => setPriorities((current) => ({ ...current, [priority.key]: Number(event.target.value) }))} aria-label={`${priority.label} priority`} />
+            <span className="priority-control">
+              <input type="range" min="1" max="5" step="1" value={priorities[priority.key]} onChange={(event) => setPriorities((current) => ({ ...current, [priority.key]: Number(event.target.value) }))} aria-label={`${priority.label} priority`} />
+              <span className="range-ends" aria-hidden="true"><small>Helpful</small><small>Essential</small></span>
+            </span>
             <output>{priorities[priority.key] === 5 ? "Essential" : priorities[priority.key] >= 3 ? "Important" : "Helpful"}</output>
           </label>
         ))}
       </div>
-      <button className="primary-button" type="button" onClick={onCompare}>Compare rotations</button>
+      <div className="step-footer"><button className="primary-button" type="button" onClick={onCompare}>Compare rotations</button></div>
     </div>
   );
 }

@@ -17,6 +17,7 @@ import { DISTRICTS, type ResultTab, type Step } from "./field-shift/config";
 import { FarmDetailsStep } from "./field-shift/FarmDetailsStep";
 import { LocateStep } from "./field-shift/LocateStep";
 import { MapEvidenceDock } from "./field-shift/MapEvidenceDock";
+import { MapGuidanceOverlay } from "./field-shift/MapGuidanceOverlay";
 import { PrioritiesStep } from "./field-shift/PrioritiesStep";
 import { ResultsStep } from "./field-shift/ResultsStep";
 import { Brand, Icon, StepProgress } from "./field-shift/SharedUi";
@@ -146,21 +147,7 @@ export default function FieldShiftApp() {
         onImageryStatusChange={setImageryStatus}
       />
 
-      {step === "locate" && (
-        <div className="map-callout">
-          <span>{selectionMode === "boundary" ? boundaryPoints + 1 : 1}</span>
-          <div>
-            <strong>{selectionMode === "boundary" ? "Zoom in, then draw your field" : "Tap your field location"}</strong>
-            <small>{selectionMode === "boundary" ? "Find your area, then tap each corner. Three or more points make a boundary." : "Place one pin, or choose a known farming area in the panel."}</small>
-          </div>
-        </div>
-      )}
-      {location && step !== "results" && (
-        <div className="map-selection-badge">
-          <Icon name="pin" />
-          <div><small>{location.boundary ? `${boundaryPoints} corners · ${location.areaHectares ?? 0} ha` : "Selected location"}</small><strong>{location.name}</strong></div>
-        </div>
-      )}
+      {step === "locate" && <MapGuidanceOverlay boundaryPoints={boundaryPoints} location={location} selectionMode={selectionMode} />}
 
       <header className="topbar">
         <Brand />
@@ -176,8 +163,8 @@ export default function FieldShiftApp() {
         {step !== "locate" && step !== "results" && <button className="back-button" type="button" onClick={goBack}><Icon name="back" /> Back</button>}
         {step !== "results" && (
           <div className="panel-intro">
-            <p>{step === "locate" ? "Start here" : step === "details" ? `Question ${detailQuestion + 1} of 4 · all optional` : "These choices change the ranking"}</p>
             <h1 id="panel-title">{panelTitle}</h1>
+            <p>{step === "locate" ? "Draw your field for closer map context, or place one point for a quick estimate." : step === "details" ? `Question ${detailQuestion + 1} of 4 · answer what you know and skip what you don’t.` : "Move the sliders to show what matters most on your farm."}</p>
           </div>
         )}
 

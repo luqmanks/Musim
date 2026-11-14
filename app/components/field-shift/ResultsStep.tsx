@@ -31,15 +31,15 @@ export function ResultsStep({
     <div className="results-content">
       <div className="result-header">
         <div>
-          <span className="location-kicker"><Icon name="pin" /> {location?.name}{location?.areaHectares ? ` · ${location.areaHectares} ha` : ""}</span>
-          <h1 id="panel-title">Your field brief</h1>
-          <p>Conditions, evidence and rotation trade-offs in one view.</p>
+          <h1 id="panel-title">Your field plan</h1>
+          <span className="location-kicker"><Icon name="pin" /> {location?.name}{location?.areaHectares ? ` · ${location.areaHectares.toLocaleString()} ha` : ""}</span>
+          <p>See what the climate means for this field, then compare practical rotation options.</p>
         </div>
         <button className="edit-button" type="button" onClick={onEdit}>Edit my answers</button>
       </div>
       <div className="result-tabs" role="tablist" aria-label="Result views">
-        <button role="tab" aria-selected={resultTab === "conditions"} onClick={() => onTabChange("conditions")}>Conditions</button>
-        <button role="tab" aria-selected={resultTab === "rotations"} onClick={() => onTabChange("rotations")}>Rotations</button>
+        <button id="conditions-tab" role="tab" aria-selected={resultTab === "conditions"} aria-controls="conditions-panel" onClick={() => onTabChange("conditions")}>Field conditions</button>
+        <button id="rotations-tab" role="tab" aria-selected={resultTab === "rotations"} aria-controls="rotations-panel" onClick={() => onTabChange("rotations")}>Rotation options</button>
       </div>
 
       {loading && (
@@ -49,7 +49,7 @@ export function ResultsStep({
       )}
 
       {!loading && climate && resultTab === "conditions" && (
-        <div className="conditions-view">
+        <div id="conditions-panel" className="conditions-view" role="tabpanel" aria-labelledby="conditions-tab">
           {climate.isFallback && <div className="data-warning"><strong>Demonstration climate shown</strong><span>The live NASA request was unavailable. Scores are clearly marked as lower confidence.</span></div>}
           <div className="conditions-summary">
             <div className="metric-row">
@@ -58,7 +58,7 @@ export function ResultsStep({
               <div><span>Wettest month</span><strong>{climate.wettestMonth}</strong></div>
               <div><span>Drier months</span><strong>{climate.dryMonths}</strong></div>
             </div>
-            <div className="insight-callout"><span aria-hidden="true">↳</span><p><strong>{climate.wettestMonth} carries the strongest heavy-rain pressure.</strong> Avoid leaving the field bare when erosion exposure is highest.</p></div>
+            <div className="insight-callout"><span aria-hidden="true">↳</span><p><strong>What this means: {climate.wettestMonth} has the strongest heavy-rain pressure.</strong> Keep living cover on the soil where possible and confirm drainage in the field.</p></div>
             <div className="provenance-card">
               <div><span>Source</span><strong>{climate.source}</strong></div><div><span>Period</span><strong>{climate.period}</strong></div><div><span>Spatial context</span><strong>{climate.resolution}</strong></div>
               <a href={climate.sourceUrl} target="_blank" rel="noreferrer">Open NASA source</a>
@@ -70,13 +70,13 @@ export function ResultsStep({
       )}
 
       {!loading && climate && resultTab === "rotations" && (
-        <div className="rotations-view">
+        <div id="rotations-panel" className="rotations-view" role="tabpanel" aria-labelledby="rotations-tab">
           <div className="scenario-control">
             <div><strong>Stress-test the plan</strong><span>{SCENARIOS.find((item) => item.key === scenario)?.note}</span></div>
             <div>{SCENARIOS.map((item) => <button key={item.key} type="button" aria-pressed={scenario === item.key} onClick={() => onScenarioChange(item.key)}>{item.label}</button>)}</div>
           </div>
           <div className="rotation-cards">{results.map((result) => <RotationCard key={result.id} result={result} featured={result.id === "conservative"} />)}</div>
-          <p className="decision-note">These comparisons support a conversation. Confirm crop timing, drainage, seed access and prices with a local agricultural officer before changing your rotation.</p>
+          <p className="decision-note"><strong>Use this as a conversation guide.</strong> Confirm crop timing, drainage, seed access and prices with a local agricultural officer before changing your rotation.</p>
         </div>
       )}
     </div>
@@ -110,20 +110,26 @@ function RotationCard({ result, featured }: { result: RotationScore; featured?: 
   const keyScores: PriorityKey[] = ["water", "soil", "income", "erosion"];
 
   return (
-    <article className={`rotation-card ${featured ? "featured" : ""}`}>
-      <header><div><span>{result.label}</span><h3>{result.descriptor}</h3></div><div className="overall-score"><strong>{result.total}</strong><small>/100</small></div></header>
+    <article className={`rotation-card ${featured ? "featured" : ""}`} aria-labelledby={`rotation-${result.id}-title`}>
+      <header>
+        <div><span className="rotation-label">{result.label}</span><h3 id={`rotation-${result.id}-title`}>{result.descriptor}</h3></div>
+        <div className="overall-score"><span>Fit score</span><div><strong>{result.total}</strong><small>/100</small></div></div>
+      </header>
       <div className="crop-sequence">
         {result.crops.map((crop, index) => <div key={`${crop}-${index}`}><span>{index + 1}</span><strong>{cropLabel(crop)}</strong>{index < result.crops.length - 1 && <i aria-hidden="true" />}</div>)}
       </div>
       <div className="score-grid">
-        {keyScores.map((key) => <div key={key}><span>{PRIORITIES.find((item) => item.key === key)?.label}</span><strong>{result.scores[key]}</strong><div><i style={{ width: `${result.scores[key]}%` }} /></div></div>)}
+        {keyScores.map((key) => <div key={key}><span>{PRIORITIES.find((item) => item.key === key)?.label}</span><strong>{result.scores[key]}</strong><div role="meter" aria-label={`${PRIORITIES.find((item) => item.key === key)?.label} score`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={result.scores[key]}><i style={{ width: `${result.scores[key]}%` }} /></div></div>)}
       </div>
       <details className="evidence-details" open={featured}>
-        <summary>Why this score</summary><ul>{result.why.map((reason) => <li key={reason}>{reason}</li>)}</ul>
-        <h4>NASA evidence</h4><ul>{result.evidence.map((item) => <li key={item}>{item}</li>)}</ul>
-        <h4>Check locally</h4><ul>{result.risks.map((risk) => <li key={risk}>{risk}</li>)}</ul>
+        <summary><span>Evidence and local checks</span><small>{result.evidence.length + result.risks.length} items</small></summary>
+        <div className="evidence-body">
+          <h4>Why it fits</h4><ul>{result.why.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+          <h4>NASA evidence</h4><ul>{result.evidence.map((item) => <li key={item}>{item}</li>)}</ul>
+          <h4>Check locally</h4><ul>{result.risks.map((risk) => <li key={risk}>{risk}</li>)}</ul>
+        </div>
       </details>
-      <footer><span className={`confidence ${result.confidence.toLowerCase()}`}>{result.confidence} confidence</span><span>{result.gaps.length} information gap{result.gaps.length === 1 ? "" : "s"}</span></footer>
+      <footer><span className={`confidence ${result.confidence.toLowerCase()}`}><i aria-hidden="true" />{result.confidence} confidence</span><span className="gap-count">{result.gaps.length} information gap{result.gaps.length === 1 ? "" : "s"}</span></footer>
     </article>
   );
 }
