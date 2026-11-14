@@ -1,9 +1,5 @@
-import FieldMap from "./components/FieldMap";
+import FieldShiftApp from "./components/FieldShiftApp";
 
 export default function Home() {
-  return (
-    <main className="flex h-dvh w-full flex-col">
-      <FieldMap />
-    </main>
-  );
+  return <FieldShiftApp />;
 }

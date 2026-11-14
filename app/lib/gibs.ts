@@ -33,6 +33,15 @@ export const GIBS_LAYERS: GibsLayer[] = [
     ext: "png",
     maxZoom: 7,
   },
+  {
+    key: "soil-moisture",
+    label: "Soil moisture",
+    note: "Regional surface soil moisture from NASA SMAP (about 9 km per pixel).",
+    gibsId: "SMAP_L3_Passive_Enhanced_Day_Soil_Moisture",
+    tileMatrixSet: "GoogleMapsCompatible_Level6",
+    ext: "png",
+    maxZoom: 6,
+  },
   // TODO: vegetation health (NDVI). MODIS_Terra_L3_NDVI_16Day exists on the
   // epsg3857 "best" endpoint, but confirm its tileMatrixSet in GetCapabilities first.
 ];
